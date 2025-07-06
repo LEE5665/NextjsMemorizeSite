@@ -23,13 +23,45 @@ export default function RegisterPage() {
   }
 
   return (
-    <form onSubmit={handleRegister} className="max-w-md mx-auto mt-10 space-y-4 p-6 border rounded">
-      <h2 className="text-2xl font-bold">회원가입</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      <input type="text" placeholder="이름" className="w-full p-2 border rounded" value={name} onChange={e => setName(e.target.value)} />
-      <input type="email" placeholder="이메일" className="w-full p-2 border rounded" value={email} onChange={e => setEmail(e.target.value)} />
-      <input type="password" placeholder="비밀번호" className="w-full p-2 border rounded" value={password} onChange={e => setPassword(e.target.value)} />
-      <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">회원가입</button>
-    </form>
+    <main className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)]">
+      <form
+        onSubmit={handleRegister}
+        className="w-full max-w-md space-y-4 p-6 rounded border border-[var(--border-color)] bg-[var(--input-bg)]"
+      >
+        <h2 className="text-2xl font-bold text-center">회원가입</h2>
+        {error && <p className="text-red-500">{error}</p>}
+        <input
+          type="text"
+          placeholder="이름"
+          className="w-full p-2 rounded bg-white dark:bg-[#1e1e1e] border border-[var(--border-color)]"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+        <input
+          type="email"
+          placeholder="이메일"
+          className="w-full p-2 rounded bg-white dark:bg-[#1e1e1e] border border-[var(--border-color)]"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="비밀번호"
+          className="w-full p-2 rounded bg-white dark:bg-[#1e1e1e] border border-[var(--border-color)]"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+        <button
+          type="submit"
+          className="w-full p-2 bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white rounded"
+        >
+          회원가입
+        </button>
+        <p className="text-sm text-center">
+          이미 계정이 있으신가요?{' '}
+          <a href="/login" className="text-blue-500 hover:underline">로그인</a>
+        </p>
+      </form>
+    </main>
   )
 }

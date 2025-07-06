@@ -17,13 +17,14 @@ model User {
 }
 
 model QuizSet {
-  id         Int        @id @default(autoincrement())
-  title      String
-  description String?
-  creator    User       @relation(fields: [creatorId], references: [id])
-  creatorId  Int
-  questions  Question[] // 1:N
-  createdAt  DateTime   @default(now())
+  id        Int        @id @default(autoincrement())
+  title     String
+  order     Int        @default(0)
+  creator   User       @relation(fields: [creatorId], references: [id])
+  creatorId Int
+  questions Question[]
+  progress  Json?      // 이어서할 문제 인덱스 저장 등
+  createdAt DateTime   @default(now())
 }
 
 model Question {

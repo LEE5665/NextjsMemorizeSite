@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `QuizSet` ADD COLUMN `order` INTEGER NOT NULL DEFAULT 0;
