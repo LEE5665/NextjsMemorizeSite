@@ -1,0 +1,36 @@
+-- AlterTable
+ALTER TABLE `QuizSet` ADD COLUMN `folderId` INTEGER NULL,
+    ADD COLUMN `isPublic` BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN `type` ENUM('WORD', 'QA') NOT NULL DEFAULT 'WORD';
+
+-- CreateTable
+CREATE TABLE `Folder` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `creatorId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SharedQuizSet` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `quizSetId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Folder` ADD CONSTRAINT `Folder_creatorId_fkey` FOREIGN KEY (`creatorId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `QuizSet` ADD CONSTRAINT `QuizSet_folderId_fkey` FOREIGN KEY (`folderId`) REFERENCES `Folder`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SharedQuizSet` ADD CONSTRAINT `SharedQuizSet_quizSetId_fkey` FOREIGN KEY (`quizSetId`) REFERENCES `QuizSet`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SharedQuizSet` ADD CONSTRAINT `SharedQuizSet_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

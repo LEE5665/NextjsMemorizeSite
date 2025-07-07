@@ -12,27 +12,58 @@ model User {
   email     String    @unique
   name      String
   password  String
-  quizSets  QuizSet[] // 1:N
+  quizSets  QuizSet[]       @relation("CurrentOwner")
+  sharedQuizSets QuizSet[]  @relation("OriginalCreator")
+  folders   Folder[]
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+}
+
+model Folder {
+  id        Int       @id @default(autoincrement())
+  name      String
+  creator   User      @relation(fields: [creatorId], references: [id])
+  creatorId Int
+
+  quizSets  QuizSet[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
 }
 
 model QuizSet {
-  id        Int        @id @default(autoincrement())
-  title     String
-  order     Int        @default(0)
-  creator   User       @relation(fields: [creatorId], references: [id])
-  creatorId Int
-  questions Question[]
-  progress  Json?      // 이어서할 문제 인덱스 저장 등
-  createdAt DateTime   @default(now())
+  id         Int        @id @default(autoincrement())
+  title      String
+
+  // 실제 소유자
+  creator    User       @relation("CurrentOwner", fields: [creatorId], references: [id])
+  creatorId  Int
+
+  // 원본 제작자 (공유받은 경우)
+  originalCreator   User? @relation("OriginalCreator", fields: [originalCreatorId], references: [id], onDelete: SetNull)
+  originalCreatorId Int?
+
+  folders    Folder[]
+
+  type       QuizType   @default(WORD)
+  isPublic   Boolean    @default(false)
+  questions  Question[]
+  progress   Json?
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @default(now()) @updatedAt
 }
 
 model Question {
   id        Int      @id @default(autoincrement())
-  content   String   // 문제 본문
-  answer    String   // 정답
+  content   String
+  answer    String
   quizSet   QuizSet  @relation(fields: [quizSetId], references: [id])
   quizSetId Int
   createdAt DateTime @default(now())
 }
 
+enum QuizType {
+  WORD
+  QA
+}
