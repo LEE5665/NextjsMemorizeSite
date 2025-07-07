@@ -28,32 +28,36 @@ export default function MyQuizTab() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">내 모든 퀴즈</h1>
 
-      {/* 정렬 & 버튼 */}
-      <div className="flex justify-between items-center mb-6">
-        <select
-          className="border p-2 rounded"
-          value={sort}
-          onChange={(e) => {
-            const params = new URLSearchParams(searchParams.toString())
-            params.set('sort', e.target.value)
-            router.push(`?${params.toString()}`)
-          }}
-        >
-          <option value="createdAt">최신순</option>
-          <option value="updatedAt">수정순</option>
-          <option value="title">제목순</option>
-        </select>
+      {/* 정렬 + 버튼 그룹 */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        {/* 정렬 선택 */}
+        <div>
+          <select
+            className="border border-gray-300 dark:border-zinc-700 px-3 py-2 rounded w-full sm:w-auto"
+            value={sort}
+            onChange={(e) => {
+              const params = new URLSearchParams(searchParams.toString())
+              params.set('sort', e.target.value)
+              router.push(`?${params.toString()}`)
+            }}
+          >
+            <option value="createdAt">최신순</option>
+            <option value="updatedAt">수정순</option>
+            <option value="title">제목순</option>
+          </select>
+        </div>
 
-        <div className="space-x-2">
+        {/* 버튼 그룹 */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white px-4 py-2 rounded"
+            className="w-full sm:w-auto bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white px-4 py-2 rounded"
           >
             퀴즈 추가
           </button>
           <button
             onClick={() => setShowUploadModal(true)}
-            className="bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white px-4 py-2 rounded"
+            className="w-full sm:w-auto bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white px-4 py-2 rounded"
           >
             파일 업로드
           </button>

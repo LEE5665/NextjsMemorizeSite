@@ -13,7 +13,7 @@ export async function middleware(req) {
     pathname.startsWith('/_next')
 
   if (!token && !isAuthPage) {
-    return NextResponse.redirect(new URL('/register', req.url))
+    return NextResponse.redirect(new URL('/login', req.url))
   }
 
   return NextResponse.next()
