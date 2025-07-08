@@ -25,6 +25,10 @@ export default function LoginPage() {
     }
   }
 
+  const handleGoogleLogin = async () => {
+    await signIn('google', { callbackUrl: '/' })
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)]">
       <form
@@ -33,6 +37,7 @@ export default function LoginPage() {
       >
         <h2 className="text-2xl font-bold text-center">로그인</h2>
         {error && <p className="text-red-500">{error}</p>}
+
         <input
           type="email"
           placeholder="이메일"
@@ -53,6 +58,17 @@ export default function LoginPage() {
         >
           로그인
         </button>
+
+        <hr className="border-gray-300 dark:border-gray-600" />
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full p-2 bg-red-500 hover:bg-red-600 text-white rounded"
+        >
+          Google로 로그인
+        </button>
+
         <p className="text-sm text-center">
           아직 계정이 없으신가요?{' '}
           <a href="/register" className="text-blue-500 hover:underline">회원가입</a>

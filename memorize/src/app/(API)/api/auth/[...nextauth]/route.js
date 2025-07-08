@@ -1,13 +1,17 @@
-// app/api/auth/[...nextauth]/route.js
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
+import KakaoProvider from 'next-auth/providers/kakao'
 import { PrismaClient } from "@prisma/client";
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import bcrypt from 'bcrypt'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
+
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -24,19 +28,30 @@ export const authOptions = {
         return { id: user.id, email: user.email, name: user.name }
       },
     }),
+
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
+
   ],
   pages: {
-    // signIn: '/login',
+    // signIn: '/login', // 필요하면 커스텀 로그인 페이지도 설정 가능
   },
-  session: { strategy: 'jwt',
+  session: {
+    strategy: 'jwt',
     maxAge: 24 * 60 * 60,
-    updateAge: 24 * 60 * 60
-   },
+    updateAge: 24 * 60 * 60,
+  },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, trigger, user, session }) {
       if (user) {
-            token.id = user.id
-            token.name = user.name
+        token.id = user.id
+        token.name = user.name
+      }
+      if (trigger === "update" && session.name) {
+        token.name = session.name
       }
       return token
     },

@@ -15,9 +15,10 @@ export default function TabClientWrapper() {
   const [activeTab, setActiveTab] = useState(initialTab)
 
   useEffect(() => {
-    // URL에 tab 파라미터 반영
-    router.replace(`?tab=${activeTab}`)
-  }, [activeTab, router])
+    const params = new URLSearchParams(window.location.search)
+    params.set('tab', activeTab)
+    router.replace(`?${params.toString()}`)
+  }, [activeTab])
 
   const renderTab = () => {
     switch (activeTab) {

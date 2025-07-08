@@ -15,6 +15,7 @@ export default function QuizSetModal({
   const [type, setType] = useState('WORD')
   const [isPublic, setIsPublic] = useState(false)
   const [questions, setQuestions] = useState([{ content: '', answer: '' }])
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (initialData) {
@@ -38,14 +39,41 @@ export default function QuizSetModal({
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (editMode && initialData?.id) {
-      await axios.put(`/api/quizsets/${initialData.id}`, { title, isPublic, questions })
-    } else {
-      await axios.post('/api/quizsets', { title, type, isPublic, questions })
+    if (!title.trim()) {
+      setError('제목을 입력해주세요.')
+      return
     }
 
-    onClose()
-    router.refresh()
+    for (const q of questions) {
+      if (!q.content.trim() || !q.answer.trim()) {
+        setError('모든 문제와 정답을 입력해주세요.')
+        return
+      }
+    }
+
+    setError('') // 에러 초기화
+
+    try {
+      if (editMode && initialData?.id) {
+        await axios.put(`/api/quizsets/${initialData.id}`, {
+          title,
+          isPublic,
+          questions,
+        })
+      } else {
+        await axios.post('/api/quizsets', {
+          title,
+          type,
+          isPublic,
+          questions,
+        })
+      }
+
+      onClose()
+      router.refresh()
+    } catch (err) {
+      setError('저장 중 오류가 발생했습니다.')
+    }
   }
 
   return (
@@ -63,6 +91,8 @@ export default function QuizSetModal({
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
           <input
             type="text"
             placeholder="퀴즈 제목"
@@ -82,7 +112,6 @@ export default function QuizSetModal({
             </select>
           )}
 
-          {/* ✅ 공개 여부는 무조건 표시 */}
           <label className="block">
             <input
               type="checkbox"

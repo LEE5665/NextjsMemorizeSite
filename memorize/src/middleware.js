@@ -7,20 +7,24 @@ export async function middleware(req) {
 
   const isAuthPage =
     pathname.startsWith('/register') ||
-    pathname.startsWith('/login') ||
+    pathname.startsWith('/login')
+
+  const isApiOrInternal =
     pathname.startsWith('/api') ||
     pathname === '/favicon.ico' ||
     pathname.startsWith('/_next')
 
-  if (!token && !isAuthPage) {
+  if (!token && !isAuthPage && !isApiOrInternal) {
     return NextResponse.redirect(new URL('/login', req.url))
+  }
+
+  if (token && isAuthPage) {
+    return NextResponse.redirect(new URL('/', req.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next|favicon.ico|login|register).*)',
-  ],
+  matcher: ['/(.*)'],
 }
