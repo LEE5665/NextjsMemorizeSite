@@ -25,7 +25,7 @@ export default function SharePage({ params }) {
     }
 
     handleShare()
-  }, [token])
+  }, [token, router])
 
   return <p></p>
 }

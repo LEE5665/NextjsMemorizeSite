@@ -38,7 +38,7 @@ export default function FolderModal({ onClose, onDone, folderId = null, defaultN
     }
 
     fetchData()
-  }, [folderId])
+  }, [folderId, isEdit])
 
   const toggleSelection = (id) => {
     setSelectedIds(prev =>

@@ -11,12 +11,11 @@ export default function QuizViewPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const router = useRouter()
 
-  const fetchQuiz = async () => {
-    const res = await axios.get(`/api/quizsets/${id}`)
-    setQuizSet(res.data)
-  }
-
   useEffect(() => {
+    const fetchQuiz = async () => {
+      const res = await axios.get(`/api/quizsets/${id}`)
+      setQuizSet(res.data)
+    }
     fetchQuiz()
   }, [id])
 

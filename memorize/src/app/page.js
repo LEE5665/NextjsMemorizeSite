@@ -4,6 +4,8 @@ import Header from './components/Header'
 import ExploreTab from './components/Tab'
 import axios from 'axios'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ExplorePage() {
   const baseURL = process.env.NEXTAUTH_URL
   const res = await axios.get(`${baseURL}/api/explore`)

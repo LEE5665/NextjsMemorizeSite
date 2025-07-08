@@ -1,6 +1,7 @@
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
 import MyQuizTab from './components/Tab'
+import { Suspense } from 'react'
 
 export default async function MyQuizPage() {
 
@@ -10,7 +11,9 @@ export default async function MyQuizPage() {
       <div className="flex flex-1 bg-white dark:bg-zinc-900">
         <Sidebar />
         <main className="flex-1 p-8">
-          <MyQuizTab/>
+          <Suspense fallback={<div></div>}>
+            <MyQuizTab />
+          </Suspense>
         </main>
       </div>
     </div>

@@ -55,7 +55,7 @@ export default function MCQuizPage() {
     setOptions(shuffle([...filtered, q.answer]))
     setSelected(null)
     setShowResult(false)
-  }, [current, questions])
+  }, [current, questions, q])
 
   const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
 

@@ -18,7 +18,7 @@ export default function TabClientWrapper() {
     const params = new URLSearchParams(window.location.search)
     params.set('tab', activeTab)
     router.replace(`?${params.toString()}`)
-  }, [activeTab])
+  }, [activeTab, router])
 
   const renderTab = () => {
     switch (activeTab) {
