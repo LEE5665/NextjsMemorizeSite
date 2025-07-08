@@ -1,8 +1,8 @@
 import Sidebar from '../../components/Sidebar'
 import Header from '../../components/Header'
-import MyQuizTab from './components/Tab'
+import MyInfoTab from './Tab'
 
-export default async function MyQuizPage() {
+export default async function MyInfoPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -10,7 +10,7 @@ export default async function MyQuizPage() {
       <div className="flex flex-1 bg-white dark:bg-zinc-900">
         <Sidebar />
         <main className="flex-1 p-8">
-          <MyQuizTab/>
+          <MyInfoTab/>
         </main>
       </div>
     </div>

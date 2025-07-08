@@ -14,7 +14,7 @@ export default async function ExplorePage() {
       <Header />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-8 bg-black">
+        <main className="flex-1 p-8 bg-white dark:bg-zinc-900">
           <ExploreTab initialQuizSets={quizSets} />
         </main>
       </div>

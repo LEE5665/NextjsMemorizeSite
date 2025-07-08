@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
-import CreateQuizSetModal from './components/CreateQuiz'
-import UploadQuizModal from './components/UploadQuiz'
-import FolderModal from './components/CreateFolder'
-import ShareLinkModal from './components/ShareLink'
+import CreateQuizSetModal from '../../(PAGE)/MyQuiz/components/CreateQuiz'
+import UploadQuizModal from '../../(PAGE)/MyQuiz/components/UploadQuiz'
+import FolderModal from '../../(PAGE)/MyQuiz/components/CreateFolder'
+import ShareLinkModal from '../../(PAGE)/MyQuiz/components/ShareLink'
 import { ChevronLeft, Pencil, Trash2, Share2 } from 'lucide-react'
 
 export default function MyQuizTab() {

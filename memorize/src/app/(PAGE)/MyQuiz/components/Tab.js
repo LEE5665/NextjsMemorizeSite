@@ -3,24 +3,22 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
-import CreateQuizSetModal from '../../components/Tabs/components/CreateQuiz'
-import UploadQuizModal from '../../components/Tabs/components/UploadQuiz'
-import FolderModal from '../../components/Tabs/components/CreateFolder'
-import ShareLinkModal from '../../components/Tabs/components/ShareLink'
+import CreateQuizSetModal from './CreateFolder'
+import UploadQuizModal from './UploadQuiz'
+import FolderModal from './CreateFolder'
+import ShareLinkModal from './ShareLink'
 import { ChevronLeft, Pencil, Trash2, Share2 } from 'lucide-react'
 
-export default function MyQuizTab({ initialQuizSets, initialFolders }) {
+export default function MyQuizTab() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // 검색, 정렬, 폴더 등 파라미터 상태
   const sort = searchParams.get('sort') ?? 'updatedAt'
   const folderSort = searchParams.get('folderSort') ?? 'updatedAt'
   const folderId = searchParams.get('folder')
 
-  // ✅ SSR에서 받은 초기 데이터로 상태 초기화!
-  const [quizSets, setQuizSets] = useState(initialQuizSets)
-  const [folders, setFolders] = useState(initialFolders)
+  const [quizSets, setQuizSets] = useState(null)
+  const [folders, setFolders] = useState([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
@@ -30,7 +28,6 @@ export default function MyQuizTab({ initialQuizSets, initialFolders }) {
   const [showShareModal, setShowShareModal] = useState(false)
   const [currentShareUrl, setCurrentShareUrl] = useState('')
 
-  // 정렬/폴더 등 파라미터 바뀔 때마다 API 다시 호출 (CSR)
   useEffect(() => {
     const fetchData = async () => {
       const res = await axios.get(`/api/quizsets?sort=${sort}&folder=${folderId ?? ''}&folderSort=${folderSort}`)
@@ -38,10 +35,8 @@ export default function MyQuizTab({ initialQuizSets, initialFolders }) {
       setFolders(res.data.folders)
     }
     fetchData()
-    // eslint-disable-next-line
   }, [sort, folderSort, folderId, showCreateModal, showUploadModal, showFolderModal])
 
-  // 폴더 삭제
   const handleDeleteFolder = async (id) => {
     if (!confirm('정말 이 폴더를 삭제하시겠습니까?')) return
     await axios.delete(`/api/folders/${id}`)
@@ -54,7 +49,6 @@ export default function MyQuizTab({ initialQuizSets, initialFolders }) {
     }
   }
 
-  // 폴더 공유
   const handleShare = async (folderId) => {
     try {
       const res = await axios.post(`/api/folders/${folderId}/share`)
@@ -66,7 +60,6 @@ export default function MyQuizTab({ initialQuizSets, initialFolders }) {
     }
   }
 
-  // 공유 링크 복사
   const handleCopy = async () => {
     if (currentShareUrl) {
       try {
@@ -115,7 +108,6 @@ export default function MyQuizTab({ initialQuizSets, initialFolders }) {
         )}
       </div>
 
-      {/* 폴더 목록 */}
       <div className="space-y-2">
         {folders.map((folder) => (
           <div key={folder.id} className="rounded hover:bg-[var(--input-bg)] px-3 py-2 group">
@@ -130,6 +122,7 @@ export default function MyQuizTab({ initialQuizSets, initialFolders }) {
               >
                 📁 {folder.name}
               </button>
+
               <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition">
                 <button
                   onClick={() => handleShare(folder.id)}
