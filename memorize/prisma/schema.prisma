@@ -12,8 +12,7 @@ model User {
   email     String    @unique
   name      String
   password  String
-  quizSets  QuizSet[]       @relation("CurrentOwner")
-  sharedQuizSets QuizSet[]  @relation("OriginalCreator")
+  quizSets  QuizSet[]
   folders   Folder[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
@@ -25,7 +24,7 @@ model Folder {
   creator   User      @relation(fields: [creatorId], references: [id])
   creatorId Int
 
-  quizSets  QuizSet[]
+  quizSets  QuizSet[] // 1:N
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
@@ -35,15 +34,11 @@ model QuizSet {
   id         Int        @id @default(autoincrement())
   title      String
 
-  // 실제 소유자
-  creator    User       @relation("CurrentOwner", fields: [creatorId], references: [id])
+  creator    User       @relation(fields: [creatorId], references: [id])
   creatorId  Int
 
-  // 원본 제작자 (공유받은 경우)
-  originalCreator   User? @relation("OriginalCreator", fields: [originalCreatorId], references: [id], onDelete: SetNull)
-  originalCreatorId Int?
-
-  folders    Folder[]
+  folder     Folder?    @relation(fields: [folderId], references: [id])
+  folderId   Int?       // 하나의 Folder에만 속할 수 있음 (nullable)
 
   type       QuizType   @default(WORD)
   isPublic   Boolean    @default(false)

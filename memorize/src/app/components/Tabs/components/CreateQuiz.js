@@ -1,5 +1,3 @@
-// QuizSetModal.js
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -10,7 +8,6 @@ export default function QuizSetModal({
   onClose,
   initialData = null,
   editMode = false,
-  currentUserId = null,
 }) {
   const router = useRouter()
 
@@ -18,10 +15,6 @@ export default function QuizSetModal({
   const [type, setType] = useState('WORD')
   const [isPublic, setIsPublic] = useState(false)
   const [questions, setQuestions] = useState([{ content: '', answer: '' }])
-
-  // ✅ 본인이 만든 퀴즈인지 판별 (originalCreatorId !== creatorId이면 공유받은 것)
-  const isSharedCopy = initialData?.originalCreatorId !== initialData?.creatorId
-  const isOwner = !initialData || initialData.creatorId === currentUserId
 
   useEffect(() => {
     if (initialData) {
@@ -89,18 +82,16 @@ export default function QuizSetModal({
             </select>
           )}
 
-          {/* ✅ 본인이 만든 퀴즈이고, 공유받은 것이 아닐 때만 체크박스 표시 */}
-          {isOwner && !isSharedCopy && (
-            <label className="block">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-              />
-              공개 퀴즈로 만들기
-            </label>
-          )}
+          {/* ✅ 공개 여부는 무조건 표시 */}
+          <label className="block">
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+            />
+            공개 퀴즈로 만들기
+          </label>
 
           {questions.map((q, index) => (
             <div key={index} className="space-y-2">

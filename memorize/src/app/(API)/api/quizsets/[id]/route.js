@@ -14,7 +14,6 @@ export async function GET(req, { params }) {
       where: { id },
       include: {
         questions: true,
-        originalCreator: { select: { id: true } }, // 공유 여부 판단용
       },
     })
 
@@ -22,7 +21,6 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: '해당 퀴즈셋이 존재하지 않습니다.' }, { status: 404 })
     }
 
-    // 🔐 비공개 접근 제한
     if (!quizSet.isPublic && quizSet.creatorId !== currentUserId) {
       return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 })
     }
@@ -30,7 +28,6 @@ export async function GET(req, { params }) {
     return NextResponse.json({
       ...quizSet,
       currentUserId,
-      isSharedCopy: quizSet.originalCreatorId !== quizSet.creatorId, // 공유받은 퀴즈 여부 전달
     })
   } catch (err) {
     console.error('불러오기 오류:', err)
@@ -57,7 +54,6 @@ export async function DELETE(req, { params }) {
   }
 }
 
-
 export async function PUT(req, { params }) {
   try {
     const session = await getServerSession(authOptions)
@@ -81,10 +77,10 @@ export async function PUT(req, { params }) {
         type: type ?? 'WORD',
         isPublic: !!isPublic,
         questions: {
-          create: questions.map((q) => ({ content: q.content, answer: q.answer }))
-        }
+          create: questions.map((q) => ({ content: q.content, answer: q.answer })),
+        },
       },
-      include: { questions: true }
+      include: { questions: true },
     })
 
     return NextResponse.json({ message: '수정 완료', quizSet: updated })

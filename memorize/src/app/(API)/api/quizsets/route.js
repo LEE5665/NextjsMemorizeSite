@@ -11,31 +11,38 @@ export async function GET(req) {
 
   const url = new URL(req.url)
   const sortParam = url.searchParams.get('sort') ?? 'createdAt'
+  const folderParam = url.searchParams.get('folder')
+  const folderSortParam = url.searchParams.get('folderSort') ?? 'createdAt'
 
   const allowedSorts = ['createdAt', 'updatedAt', 'title']
   const sort = allowedSorts.includes(sortParam) ? sortParam : 'createdAt'
   const direction = sort === 'title' ? 'asc' : 'desc'
 
+  const allowedFolderSorts = ['createdAt', 'updatedAt', 'name']
+  const folderSort = allowedFolderSorts.includes(folderSortParam) ? folderSortParam : 'createdAt'
+  const folderDir = folderSort === 'name' ? 'asc' : 'desc'
+
   try {
-    const quizSets = await prisma.quizSet.findMany({
-      where: { creatorId: session.user.id },
-      include: {
-        questions: true,
-        originalCreator: {
-          select: { name: true },
+    const whereClause = { creatorId: session.user.id }
+    if (folderParam) whereClause.folderId = parseInt(folderParam)
+    else whereClause.folderId = null
+
+    const [quizSets, folders] = await Promise.all([
+      prisma.quizSet.findMany({
+        where: whereClause,
+        include: {
+          questions: true,
+          folder: true,
         },
-      },
-      orderBy: { [sort]: direction },
-    })
+        orderBy: { [sort]: direction },
+      }),
+      prisma.folder.findMany({
+        where: { creatorId: session.user.id },
+        orderBy: { [folderSort]: folderDir },
+      }),
+    ])
 
-    const processed = quizSets.map((quiz) => ({
-      ...quiz,
-      displayCreator: quiz.originalCreator
-        ? quiz.originalCreator.name
-        : '본인',
-    }))
-
-    return NextResponse.json({ quizSets: processed })
+    return NextResponse.json({ quizSets, folders })
   } catch (error) {
     console.error('퀴즈 불러오기 오류:', error)
     return NextResponse.json({ error: '서버 오류 발생' }, { status: 500 })
@@ -49,7 +56,7 @@ export async function POST(req) {
   }
 
   try {
-    const { title, type, isPublic, questions } = await req.json()
+    const { title, type, isPublic, questions, folderId } = await req.json()
 
     if (!title || !Array.isArray(questions) || questions.length === 0) {
       return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
@@ -61,6 +68,7 @@ export async function POST(req) {
         type: type ?? 'WORD',
         isPublic: !!isPublic,
         creatorId: session.user.id,
+        folderId: folderId ?? null, // 📌 폴더 지정이 없으면 null
         questions: {
           create: questions.map((q) => ({
             content: q.content,
@@ -70,6 +78,7 @@ export async function POST(req) {
       },
       include: {
         questions: true,
+        folder: true,
       },
     })
 

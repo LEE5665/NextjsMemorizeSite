@@ -83,7 +83,6 @@ export default function QuizViewPage() {
         <QuizSetModal
           onClose={handleModalClose}
           initialData={quizSet}
-          currentUserId={quizSet.currentUserId}
           editMode={true}
         />
       )}
