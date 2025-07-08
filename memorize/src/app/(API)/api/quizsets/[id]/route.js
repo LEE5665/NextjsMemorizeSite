@@ -5,7 +5,8 @@ import { authOptions } from '@/app/(API)/api/auth/[...nextauth]/route'
 const prisma = new PrismaClient()
 
 export async function GET(req, { params }) {
-  const id = Number(params.id)
+  const param = await params
+  const id = Number(param.id)
   const session = await getServerSession(authOptions)
   const currentUserId = session?.user?.id ?? null
 
