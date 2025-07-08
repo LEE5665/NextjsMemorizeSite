@@ -28,7 +28,7 @@ export async function POST(req, { params }) {
 
   const copied = await prisma.quizSet.create({
     data: {
-      title: original.title + ' [SHARED테스트]',
+      title: original.title + ' [SHARED]',
       type: original.type,
       creatorId: currentUserId,
       isPublic: false,

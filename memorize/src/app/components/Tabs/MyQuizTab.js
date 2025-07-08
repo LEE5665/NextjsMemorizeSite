@@ -6,7 +6,8 @@ import axios from 'axios'
 import CreateQuizSetModal from './components/CreateQuiz'
 import UploadQuizModal from './components/UploadQuiz'
 import FolderModal from './components/CreateFolder'
-import { ChevronLeft, Pencil, Trash2 } from 'lucide-react'
+import ShareLinkModal from './components/ShareLink'
+import { ChevronLeft, Pencil, Trash2, Share2 } from 'lucide-react'
 
 export default function MyQuizTab() {
   const searchParams = useSearchParams()
@@ -22,6 +23,10 @@ export default function MyQuizTab() {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
   const [editFolder, setEditFolder] = useState(null)
+  const [sharedUrls, setSharedUrls] = useState({})
+  const [copiedId, setCopiedId] = useState(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [currentShareUrl, setCurrentShareUrl] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,13 +49,35 @@ export default function MyQuizTab() {
     }
   }
 
+  const handleShare = async (folderId) => {
+    try {
+      const res = await axios.post(`/api/folders/${folderId}/share`)
+      setCurrentShareUrl(res.data.url)
+      setShowShareModal(true)
+      setCopiedId(null)
+    } catch (err) {
+      alert('공유 링크 생성 실패')
+    }
+  }
+
+  const handleCopy = async () => {
+    if (currentShareUrl) {
+      try {
+        await navigator.clipboard.writeText(currentShareUrl)
+        setCopiedId(true)
+        setTimeout(() => setCopiedId(null), 2000)
+      } catch (err) {
+        alert('복사 실패')
+      }
+    }
+  }
+
   if (!quizSets) return <p className="p-6">불러오는 중...</p>
 
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">내 모든 퀴즈</h1>
 
-      {/* 폴더 정렬 및 뒤로가기 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <select
           className="border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-color)] px-3 py-1 rounded w-full sm:w-auto"
@@ -81,37 +108,47 @@ export default function MyQuizTab() {
         )}
       </div>
 
-      {/* 폴더 리스트 */}
-      <div className="space-y-1">
+      <div className="space-y-2">
         {folders.map((folder) => (
-          <div key={folder.id} className="flex items-center justify-between group rounded hover:bg-[var(--input-bg)] px-3 py-1">
-            <button
-              onClick={() => {
-                const params = new URLSearchParams(searchParams.toString())
-                params.set('folder', folder.id)
-                router.push(`?${params.toString()}`)
-              }}
-              className={`text-left w-full text-[var(--text-color)] text-sm sm:text-base ${folderId === String(folder.id) ? 'font-bold' : ''}`}
-            >
-              📁 {folder.name}
-            </button>
-
-            <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition">
+          <div key={folder.id} className="rounded hover:bg-[var(--input-bg)] px-3 py-2 group">
+            <div className="flex items-center justify-between">
               <button
                 onClick={() => {
-                  setEditFolder(folder)
-                  setShowFolderModal(true)
+                  const params = new URLSearchParams(searchParams.toString())
+                  params.set('folder', folder.id)
+                  router.push(`?${params.toString()}`)
                 }}
-                className="text-[var(--text-color)] hover:text-blue-600"
+                className={`text-left w-full text-[var(--text-color)] text-sm sm:text-base ${folderId === String(folder.id) ? 'font-bold' : ''}`}
               >
-                <Pencil size={16} />
+                📁 {folder.name}
               </button>
-              <button
-                onClick={() => handleDeleteFolder(folder.id)}
-                className="text-[var(--text-color)] hover:text-red-600"
-              >
-                <Trash2 size={16} />
-              </button>
+
+              <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition">
+                <button
+                  onClick={() => handleShare(folder.id)}
+                  className="text-[var(--text-color)] hover:text-green-600"
+                  title="공유"
+                >
+                  <Share2 size={16} />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditFolder(folder)
+                    setShowFolderModal(true)
+                  }}
+                  className="text-[var(--text-color)] hover:text-blue-600"
+                  title="수정"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDeleteFolder(folder.id)}
+                  className="text-[var(--text-color)] hover:text-red-600"
+                  title="삭제"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -119,7 +156,6 @@ export default function MyQuizTab() {
 
       <hr className="border-[var(--border-color)]" />
 
-      {/* 퀴즈 정렬 및 액션 버튼들 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <select
           className="border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-color)] px-3 py-1 rounded w-full sm:w-auto"
@@ -160,7 +196,6 @@ export default function MyQuizTab() {
         </div>
       </div>
 
-      {/* 퀴즈 목록 */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {quizSets.map((quiz) => (
           <div
@@ -174,7 +209,6 @@ export default function MyQuizTab() {
         ))}
       </div>
 
-      {/* 모달들 */}
       {showCreateModal && <CreateQuizSetModal onClose={() => setShowCreateModal(false)} />}
       {showUploadModal && <UploadQuizModal onClose={() => setShowUploadModal(false)} />}
       {showFolderModal && (
@@ -183,6 +217,14 @@ export default function MyQuizTab() {
           folderId={editFolder?.id ?? null}
           defaultName={editFolder?.name ?? ''}
           onDone={() => setShowFolderModal(false)}
+        />
+      )}
+      {showShareModal && (
+        <ShareLinkModal
+          url={currentShareUrl}
+          onClose={() => setShowShareModal(false)}
+          onCopy={handleCopy}
+          copied={copiedId}
         />
       )}
     </div>
