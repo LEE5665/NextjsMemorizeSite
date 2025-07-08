@@ -1,22 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 
-export default function ExploreTab() {
-  const [quizSets, setQuizSets] = useState(null)
+export default function ExploreTab({ initialQuizSets }) {
+  const [quizSets] = useState(initialQuizSets)
   const router = useRouter()
 
-  useEffect(() => {
-    const fetch = async () => {
-      const res = await axios.get('/api/explore')
-      setQuizSets(res.data.quizSets)
-    }
-    fetch()
-  }, [])
-
-  if (!quizSets) return <p className="p-6"></p>
+  if (!quizSets) return <p className="p-6">불러오는 중...</p>
   if (quizSets.length === 0) return <p className="p-6 text-gray-500">공개된 퀴즈가 없습니다.</p>
 
   return (

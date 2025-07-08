@@ -55,7 +55,7 @@ export default function MyInfoTab() {
     location.reload()
   }
 
-  if (!user) return <p className="p-6">불러오는 중...</p>
+  if (!user) return <p className="p-6"></p>
 
   return (
     <div className="p-6 space-y-6 max-w-md">

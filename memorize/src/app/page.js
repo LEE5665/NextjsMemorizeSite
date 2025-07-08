@@ -1,13 +1,22 @@
-// app/main/page.js (서버 컴포넌트)
-import Header from './components/Header' // 서버 컴포넌트
-import TabClientWrapper from './components/TabClientWrapper' // CSR
+// app/explore/page.tsx
+import Sidebar from './components/Sidebar'
+import Header from './components/Header'
+import ExploreTab from './components/Tab'
+import axios from 'axios'
 
-export default function MainLayout() {
+export default async function ExplorePage() {
+  const baseURL = process.env.NEXTAUTH_URL
+  const res = await axios.get(`${baseURL}/api/explore`)
+  const quizSets = res.data.quizSets
+
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-color)] text-[var(--text-color)]">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <TabClientWrapper />
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1 p-8 bg-black">
+          <ExploreTab initialQuizSets={quizSets} />
+        </main>
       </div>
     </div>
   )
