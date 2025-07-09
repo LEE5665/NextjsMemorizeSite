@@ -1,35 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import QuizSetModal from '@/app/(PAGE)/myquiz/components/CreateQuiz'
 
-export default function QuizViewPage() {
-  const { id } = useParams()
-  const [quizSet, setQuizSet] = useState(null)
+export default function QuizViewPage({ quizSet }) {
   const [showEditModal, setShowEditModal] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchQuiz = async () => {
-      const res = await axios.get(`/api/quizsets/${id}`)
-      setQuizSet(res.data)
-    }
-    fetchQuiz()
-  }, [id])
-
   const handleDelete = async () => {
     if (confirm('정말 삭제할까요?')) {
-      await axios.delete(`/api/quizsets/${id}`)
+      await axios.delete(`/api/quizsets/${quizSet.id}`)
       router.push('/')
     }
   }
 
   const handleRestart = async () => {
-    if (!quizSet?.questions?.length) return
     const newOrder = [...Array(quizSet.questions.length).keys()].sort(() => Math.random() - 0.5)
-    await axios.put(`/api/quizsets/${id}/progress`, {
+    await axios.put(`/api/quizsets/${quizSet.id}/progress`, {
       currentIndex: 0,
       shuffledOrder: newOrder,
       incorrects: [],
@@ -39,22 +28,21 @@ export default function QuizViewPage() {
   }
 
   const handleResume = () => {
-    router.push(`/quizsets/mcquiz/${id}`)
+    router.push(`/quizsets/mcquiz/${quizSet.id}`)
   }
 
   const handleStart = async () => {
-    if (!quizSet?.questions?.length) return
     const newOrder = [...Array(quizSet.questions.length).keys()].sort(() => Math.random() - 0.5)
-    await axios.put(`/api/quizsets/${id}/progress`, {
+    await axios.put(`/api/quizsets/${quizSet.id}/progress`, {
       currentIndex: 0,
       shuffledOrder: newOrder,
       incorrects: [],
     })
-    router.push(`/quizsets/mcquiz/${id}`)
+    router.push(`/quizsets/mcquiz/${quizSet.id}`)
   }
 
   const handleShare = async () => {
-    const res = await axios.post(`/api/quizsets/${id}/share`)
+    const res = await axios.post(`/api/quizsets/${quizSet.id}/share`)
     if (res.status === 201) {
       alert('공유 완료! 내 퀴즈 목록으로 이동합니다.')
       router.push('/?tab=quiz')
@@ -63,12 +51,10 @@ export default function QuizViewPage() {
     }
   }
 
-  const handleModalClose = async () => {
+  const handleModalClose = () => {
     setShowEditModal(false)
-    await fetchQuiz()
+    location.reload()
   }
-
-  if (!quizSet) return <p className="p-6">불러오는 중...</p>
 
   const current = quizSet.progress?.currentIndex ?? 0
   const total = quizSet.questions.length
@@ -105,18 +91,12 @@ export default function QuizViewPage() {
           )}
           <div className="flex gap-4">
             {hasStarted && (
-              <button
-                onClick={handleResume}
-                className="text-sm text-blue-600 hover:underline"
-              >
+              <button onClick={handleResume} className="text-sm text-blue-600 hover:underline">
                 이어서 하기
               </button>
             )}
             {current > 0 && (
-              <button
-                onClick={handleRestart}
-                className="text-sm text-blue-600 hover:underline"
-              >
+              <button onClick={handleRestart} className="text-sm text-blue-600 hover:underline">
                 새로 시작하기
               </button>
             )}

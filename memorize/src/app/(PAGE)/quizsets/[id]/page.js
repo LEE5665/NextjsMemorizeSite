@@ -1,12 +1,24 @@
-import Header from '../../../components/Header' // 서버 컴포넌트
-import View from './components/View' // CSR
+import Header from '../../../components/Header'
+import View from './components/View'
+import axios from 'axios'
+import { headers } from 'next/headers'
 
-export default function MainLayout() {
+export default async function QuizViewServerPage({ params }) {
+  const param = await params
+  const { id } = param
+
+  const cookie = await headers()
+  const header = cookie.get('cookie')
+  const res = await axios.get(`${process.env.NEXTAUTH_URL}/api/quizsets/${id}`, {
+    headers: { Cookie: header },
+  })
+  const quizSet = res.data
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-color)] text-[var(--text-color)]">
       <Header />
       <main className="flex-1 overflow-y-auto">
-        <View />
+        <View quizSet={quizSet} />
       </main>
     </div>
   )

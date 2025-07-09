@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
-import CreateQuizSetModal from './CreateFolder'
+import CreateQuizSetModal from './CreateQuiz'
 import UploadQuizModal from './UploadQuiz'
 import FolderModal from './CreateFolder'
 import ShareLinkModal from './ShareLink'
@@ -22,8 +22,7 @@ export default function MyQuizTab() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
-  const [editFolder, setEditFolder] = useState(null)
-  const [sharedUrls, setSharedUrls] = useState({})
+  const [folderData, setFolderData] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [currentShareUrl, setCurrentShareUrl] = useState('')
@@ -70,6 +69,19 @@ export default function MyQuizTab() {
         alert('복사 실패')
       }
     }
+  }
+
+  const handleEditFolder = async (id) => {
+    const res = await axios.get(`/api/folders/${id}`)
+    setFolderData(res.data) // folder, inFolder, notInFolder 포함
+    setShowFolderModal(true)
+  }
+
+  const handleCreateFolder = async () => {
+    const res = await axios.get(`/api/quizsets?folder=null&sort=updatedAt`)
+    const quizSets = res.data.quizSets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    setFolderData({ folder: null, inFolder: [], notInFolder: quizSets })
+    setShowFolderModal(true)
   }
 
   if (!quizSets) return <p className="p-6"></p>
@@ -132,10 +144,7 @@ export default function MyQuizTab() {
                   <Share2 size={16} />
                 </button>
                 <button
-                  onClick={() => {
-                    setEditFolder(folder)
-                    setShowFolderModal(true)
-                  }}
+                  onClick={() => handleEditFolder(folder.id)}
                   className="text-[var(--text-color)] hover:text-blue-600"
                   title="수정"
                 >
@@ -179,10 +188,7 @@ export default function MyQuizTab() {
             퀴즈 추가
           </button>
           <button
-            onClick={() => {
-              setEditFolder(null)
-              setShowFolderModal(true)
-            }}
+            onClick={handleCreateFolder}
             className="w-full sm:w-auto bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white px-4 py-2 rounded"
           >
             폴더 추가
@@ -213,9 +219,11 @@ export default function MyQuizTab() {
       {showUploadModal && <UploadQuizModal onClose={() => setShowUploadModal(false)} />}
       {showFolderModal && (
         <FolderModal
-          onClose={() => setShowFolderModal(false)}
-          folderId={editFolder?.id ?? null}
-          defaultName={editFolder?.name ?? ''}
+          onClose={() => {
+            setShowFolderModal(false)
+            setFolderData(null)
+          }}
+          folderData={folderData}
           onDone={() => setShowFolderModal(false)}
         />
       )}

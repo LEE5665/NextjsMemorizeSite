@@ -1,33 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 
-export default function ExploreTab({ initialQuizSets, initialPage, total }) {
-  const [quizSets, setQuizSets] = useState(initialQuizSets)
-  const [page, setPage] = useState(initialPage)
-  const [loading, setLoading] = useState(false)
+export default function ExploreTab() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const page = parseInt(searchParams.get('page') || '1')
 
-  // CSR에서 page가 바뀌면 fetch
-  useEffect(() => {
-    const currentPage = parseInt(searchParams.get('page') || '1')
-    if (currentPage === initialPage) return // 처음 렌더된 페이지는 SSR 데이터 그대로 사용
-
-    const fetchData = async () => {
-      setLoading(true)
-      const res = await axios.get(`/api/explore?page=${currentPage}`)
-      setQuizSets(res.data.quizSets)
-      setPage(currentPage)
-      setLoading(false)
-    }
-
-    fetchData()
-  }, [searchParams, initialPage])
-
-  const totalPages = Math.ceil(total / 8)
+  const { data, isLoading } = useQuery({
+    queryKey: ['explore', page],
+    queryFn: async () => {
+      const res = await axios.get(`/api/explore?page=${page}`)
+      return res.data
+    },
+    keepPreviousData: true,
+  })
 
   const handlePageChange = (newPage) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -35,13 +24,18 @@ export default function ExploreTab({ initialQuizSets, initialPage, total }) {
     router.push(`?${params.toString()}`)
   }
 
+  if (isLoading || !data) {
+    return <p className="text-gray-500">로딩 중...</p>
+  }
+
+  const { quizSets, total } = data
+  const totalPages = Math.ceil(total / 8)
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">공개 퀴즈</h1>
 
-      {loading ? (
-        <p className="text-gray-500">로딩 중...</p>
-      ) : quizSets.length === 0 ? (
+      {quizSets.length === 0 ? (
         <p className="text-gray-500">공개된 퀴즈가 없습니다.</p>
       ) : (
         <>

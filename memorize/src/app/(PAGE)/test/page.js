@@ -1,10 +1,26 @@
 'use client'
 
-export default function TestPage() {
-  return (
-    <div>
-      <h1>SEO 콘텐츠입니다</h1>
-      <p>검색 엔진이 이걸 볼 수 있을까요?</p>
-    </div>
-  );
+import { useEffect, useState } from 'react'
+
+export default function StrictModeTest() {
+  let renderCount = 0;
+  const [rendered, setRendered] = useState(false);
+
+  useEffect(() => {
+    //마운트
+    renderCount++;
+    setRendered(true);
+    console.log("mount", renderCount); //1
+    return () => {
+      //언마운트
+      console.log("unmount");
+    };
+  }, []);
+
+  useEffect(() => {
+    //리마운트
+    if (rendered) {
+      console.log("remount", renderCount); //2
+    }
+  }, [rendered]);
 }

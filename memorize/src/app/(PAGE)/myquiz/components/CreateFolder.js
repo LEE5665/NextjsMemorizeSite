@@ -3,47 +3,31 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-export default function FolderModal({ onClose, onDone, folderId = null, defaultName = '' }) {
-  const [name, setName] = useState(defaultName)
+export default function FolderModal({ onClose, onDone, folderData }) {
+  const isEdit = !!folderData?.folder
+  const [name, setName] = useState(folderData?.folder?.name ?? '')
   const [loading, setLoading] = useState(false)
   const [quizSets, setQuizSets] = useState([])
   const [selectedIds, setSelectedIds] = useState([])
-  const isEdit = !!folderId
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (isEdit) {
-        const res = await axios.get(`/api/folders/${folderId}`)
-        const selected = res.data.inFolder.map(q => q.id)
-        const all = [...res.data.notInFolder, ...res.data.inFolder]
+    const selected = folderData.inFolder.map(q => q.id)
+    const all = [...folderData.inFolder, ...folderData.notInFolder]
 
-        const sorted = all.sort((a, b) => {
-          const aSelected = selected.includes(a.id)
-          const bSelected = selected.includes(b.id)
+    const sorted = all.sort((a, b) => {
+      const aSelected = selected.includes(a.id)
+      const bSelected = selected.includes(b.id)
+      if (aSelected && !bSelected) return -1
+      if (!aSelected && bSelected) return 1
+      return new Date(b.updatedAt) - new Date(a.updatedAt)
+    })
 
-          if (aSelected && !bSelected) return -1
-          if (!aSelected && bSelected) return 1
-
-          return new Date(b.updatedAt) - new Date(a.updatedAt)
-        })
-
-        setQuizSets(sorted)
-        setSelectedIds(selected)
-        setName(res.data.folder.name)
-      } else {
-        const res = await axios.get('/api/quizsets?folder=null&sort=updatedAt')
-        setQuizSets(res.data.quizSets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
-        setSelectedIds([])
-      }
-    }
-
-    fetchData()
-  }, [folderId, isEdit])
+    setQuizSets(sorted)
+    setSelectedIds(selected)
+  }, [folderData])
 
   const toggleSelection = (id) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    )
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
   }
 
   const handleSubmit = async () => {
@@ -53,7 +37,7 @@ export default function FolderModal({ onClose, onDone, folderId = null, defaultN
     try {
       let folder
       if (isEdit) {
-        const res = await axios.patch(`/api/folders/${folderId}`, {
+        const res = await axios.patch(`/api/folders/${folderData.folder.id}`, {
           name: name.trim(),
           quizSetIds: selectedIds,
         })
@@ -103,10 +87,7 @@ export default function FolderModal({ onClose, onDone, folderId = null, defaultN
         </div>
 
         <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 dark:bg-zinc-600 rounded"
-          >
+          <button onClick={onClose} className="px-4 py-2 bg-gray-300 dark:bg-zinc-600 rounded">
             취소
           </button>
           <button
