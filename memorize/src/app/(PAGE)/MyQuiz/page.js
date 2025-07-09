@@ -3,6 +3,8 @@ import Header from '../../components/Header'
 import MyQuizTab from './components/Tab'
 import { Suspense } from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function MyQuizPage() {
 
   return (
@@ -11,9 +13,9 @@ export default async function MyQuizPage() {
       <div className="flex flex-1 bg-white dark:bg-zinc-900">
         <Sidebar />
         <main className="flex-1 p-8">
-          <Suspense fallback={<div></div>}>
+          {/* <Suspense fallback={<div></div>}> */}
             <MyQuizTab />
-          </Suspense>
+          {/* </Suspense> */}
         </main>
       </div>
     </div>

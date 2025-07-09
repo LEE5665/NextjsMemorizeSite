@@ -1,25 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
 
-export default function MyInfoTab() {
-  const { data: session, update } = useSession()
-  const [user, setUser] = useState(null)
+export default function MyInfoTab({ initialUser }) {
+  const { update } = useSession()
+  const [user, setUser] = useState(initialUser)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [showNameEdit, setShowNameEdit] = useState(false)
-  const [newName, setNewName] = useState('')
+  const [newName, setNewName] = useState(initialUser.name)
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const res = await axios.get('/api/user')
-      setUser(res.data)
-      setNewName(res.data.name)
-    }
-    fetchUser()
-  }, [])
 
   const handleChangePassword = async () => {
     if (passwords.new !== passwords.confirm) {
@@ -40,7 +31,6 @@ export default function MyInfoTab() {
     try {
       await axios.put('/api/user/name', { name: newName })
       await update({ name: newName })
-      location.reload()
       setUser((prev) => ({ ...prev, name: newName }))
       setShowNameEdit(false)
     } catch (err) {
@@ -54,8 +44,6 @@ export default function MyInfoTab() {
     alert('탈퇴되었습니다.')
     location.reload()
   }
-
-  if (!user) return <p className="p-6"></p>
 
   return (
     <div className="p-6 space-y-6 max-w-md">

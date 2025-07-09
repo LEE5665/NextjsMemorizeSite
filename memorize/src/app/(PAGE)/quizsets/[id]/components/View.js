@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
-import QuizSetModal from '@/app/(PAGE)/MyQuiz/components/CreateQuiz'
+import QuizSetModal from '@/app/(PAGE)/myquiz/components/CreateQuiz'
 
 export default function QuizViewPage() {
   const { id } = useParams()

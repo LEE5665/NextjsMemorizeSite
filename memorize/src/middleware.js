@@ -7,7 +7,8 @@ export async function middleware(req) {
 
   const isAuthPage =
     pathname.startsWith('/register') ||
-    pathname.startsWith('/login')
+    pathname.startsWith('/login') ||
+    pathname === '/'
 
   const isApiOrInternal =
     pathname.startsWith('/api') ||
@@ -19,7 +20,7 @@ export async function middleware(req) {
   }
 
   if (token && isAuthPage) {
-    return NextResponse.redirect(new URL('/', req.url))
+    return NextResponse.redirect(new URL('/explore', req.url))
   }
 
   return NextResponse.next()

@@ -9,9 +9,9 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   const tabs = [
-    { key: '/', label: '공개 퀴즈' },
-    { key: '/MyQuiz', label: '내 퀴즈' },
-    { key: '/MyInfo', label: '내 정보' },
+    { key: '/explore', label: '공개 퀴즈' },
+    { key: '/myquiz', label: '내 퀴즈' },
+    { key: '/myinfo', label: '내 정보' },
   ]
 
   return (

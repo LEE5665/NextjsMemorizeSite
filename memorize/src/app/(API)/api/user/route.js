@@ -8,7 +8,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 // GET /api/user - 현재 로그인한 유저 정보 반환
-export async function GET() {
+export async function GET(req) { // req 파라미터 추가
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
@@ -24,7 +24,6 @@ export async function GET() {
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })
   }
 }
-
 // DELETE /api/user - 현재 로그인한 유저 삭제
 export async function DELETE() {
   const session = await getServerSession(authOptions)

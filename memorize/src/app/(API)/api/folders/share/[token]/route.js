@@ -46,7 +46,7 @@ export async function GET(req, { params }) {
     return NextResponse.json({
       ok: true,
       message: '폴더가 복사되었습니다.',
-      redirectUrl: `/MyQuiz?folder=${newFolder.id}`,
+      redirectUrl: `/myquiz?folder=${newFolder.id}`,
     })
   } catch (err) {
     console.error('공유 링크 오류:', err)
