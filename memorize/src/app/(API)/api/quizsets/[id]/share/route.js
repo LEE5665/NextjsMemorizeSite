@@ -10,8 +10,8 @@ export async function POST(req, { params }) {
   if (!currentUserId) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
-
-  const id = Number(params.id)
+  const param = await params
+  const id = Number(param.id)
 
   const original = await prisma.quizSet.findUnique({
     where: { id },

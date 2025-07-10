@@ -1,4 +1,3 @@
-// src/app/(API)/api/quizsets/[id]/progress/route.js
 import prisma from '@/app/libs/prismadb'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
@@ -9,12 +8,11 @@ export async function PUT(req, { params }) {
   if (!session) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
-
-  // params는 async context에서 await해야함
+  const userId = session.user.id
   const param = await params
   const id = Number(param.id)
   const url = new URL(req.url)
-  const type = url.searchParams.get('type') // CHOICE, SHORT, REVERSE_CHOICE, REVERSE_SHORT 등
+  const type = url.searchParams.get('type')
   const body = await req.json()
 
   if (!type) {
@@ -22,21 +20,39 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    // 현재 저장된 진행도 불러오기
-    const quizSet = await prisma.quizSet.findUnique({ where: { id } })
-    const prevProgress = quizSet.progress || {}
-
-    // type별로 따로 저장
-    const newProgress = { ...prevProgress, [type]: body }
-
-    // 저장
-    const updated = await prisma.quizSet.update({
-      where: { id },
-      data: { progress: newProgress }
+    const progress = await prisma.quizProgress.upsert({
+      where: { userId_quizSetId_type: { userId, quizSetId: id, type } },
+      update: { data: body },
+      create: {
+        userId,
+        quizSetId: id,
+        type,
+        data: body
+      }
     })
-    return NextResponse.json({ message: '진행 저장 완료', progress: updated.progress })
+    return NextResponse.json({ message: '진행 저장 완료', progress })
   } catch (err) {
     console.error('진행 저장 오류:', err)
     return NextResponse.json({ error: '저장 실패' }, { status: 500 })
+  }
+}
+
+export async function GET(req, { params }) {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+  }
+  const userId = session.user.id
+  const param = await params
+  const id = Number(param.id)
+
+  try {
+    const progresses = await prisma.quizProgress.findMany({
+      where: { userId, quizSetId: id }
+    })
+    // { type: ..., data: ... }[] 배열
+    return NextResponse.json({ progresses })
+  } catch (err) {
+    return NextResponse.json({ error: '조회 실패' }, { status: 500 })
   }
 }

@@ -14,6 +14,17 @@ export default async function QuizViewServerPage({ params }) {
     headers: { Cookie: header },
   })
   const quizSet = res.data
+  const currentUserId = res.data.currentUserId
+  let progresses = {}
+  try {
+    const progRes = await axios.get(`${process.env.NEXTAUTH_URL}/api/quizsets/${id}/progress`, {
+      headers: { Cookie: header },
+    })
+    
+    for (const p of progRes.data.progresses) progresses[p.type] = p.data
+  } catch {
+    progresses = {}
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,7 +32,7 @@ export default async function QuizViewServerPage({ params }) {
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 overflow-y-auto">
-          <View quizSet={quizSet} />
+          <View quizSet={quizSet} progresses={progresses} currentUserId={currentUserId} />
         </main>
       </div>
     </div>

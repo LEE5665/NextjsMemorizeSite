@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  id             String     @id @default(cuid())
-  email          String?    @unique
+  id             String        @id @default(cuid())
+  email          String?       @unique
   name           String?
   image          String?
   password       String?
   emailVerified  DateTime?
   quizSets       QuizSet[]
   folders        Folder[]
+  progresses     QuizProgress[] // 추가
   accounts       Account[]
   sessions       Session[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @default(now()) @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @default(now()) @updatedAt
 }
 
 model Account {
@@ -76,7 +77,6 @@ model Folder {
   name      String
   creator   User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
-
   quizSets  QuizSet[]
 
   createdAt DateTime  @default(now())
@@ -84,22 +84,20 @@ model Folder {
 }
 
 model QuizSet {
-  id         Int        @id @default(autoincrement())
+  id         Int           @id @default(autoincrement())
   title      String
-
-  creator    User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creator    User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId  String
-
-  folder     Folder?    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folder     Folder?       @relation(fields: [folderId], references: [id], onDelete: Cascade)
   folderId   Int?
-
-  type       QuizType   @default(WORD)
-  isPublic   Boolean    @default(false)
+  type       QuizType      @default(WORD)
+  isPublic   Boolean       @default(false)
   questions  Question[]
-  progress   Json?
+  progresses QuizProgress[] // 추가
+  // progress   Json?   // <-- 삭제!
 
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @default(now()) @updatedAt
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @default(now()) @updatedAt
 }
 
 model Question {
@@ -109,6 +107,20 @@ model Question {
   quizSet   QuizSet  @relation(fields: [quizSetId], references: [id], onDelete: Cascade)
   quizSetId Int
   createdAt DateTime @default(now())
+}
+
+model QuizProgress {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  quizSet   QuizSet  @relation(fields: [quizSetId], references: [id], onDelete: Cascade)
+  quizSetId Int
+  type      String   // 'CHOICE', 'SHORT', 'REVERSE_CHOICE', 'REVERSE_SHORT'
+  data      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, quizSetId, type])
 }
 
 enum QuizType {

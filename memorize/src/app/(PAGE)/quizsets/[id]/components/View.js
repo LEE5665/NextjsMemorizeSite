@@ -5,39 +5,55 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import QuizSetModal from '@/app/(PAGE)/myquiz/components/CreateQuiz'
 
-// 모드별 정보 (key 순서 = 보여지는 순서)
+// 모드 정의
 const MODES = [
-  { key: 'CHOICE', top: '4지선다', bottom: '뜻 맞추기', direction: 'word2mean', path: 'mcquiz' },
-  { key: 'REVERSE_CHOICE', top: '4지선다', bottom: '단어 맞추기', direction: 'mean2word', path: 'mcquiz' },
-  { key: 'SHORT', top: '단답형', bottom: '뜻 맞추기', direction: 'word2mean', path: 'short' },
-  { key: 'REVERSE_SHORT', top: '단답형', bottom: '단어 맞추기', direction: 'mean2word', path: 'short' }
+  { key: 'CHOICE', top: '4지선다', bottom: '뜻 맞추기', direction: 'word2mean', path: 'mcquiz', type: 'WORD' },
+  { key: 'REVERSE_CHOICE', top: '4지선다', bottom: '단어 맞추기', direction: 'mean2word', path: 'mcquiz', type: 'WORD' },
+  { key: 'SHORT', top: '단답형', bottom: '뜻 맞추기', direction: 'word2mean', path: 'short', type: 'WORD' },
+  { key: 'REVERSE_SHORT', top: '단답형', bottom: '단어 맞추기', direction: 'mean2word', path: 'short', type: 'WORD' },
+  { key: 'QA_CHOICE', top: '4지선다', bottom: '정답 맞추기', direction: 'qa', path: 'mcquiz', type: 'QA' },
+  { key: 'QA_SHORT', top: '단답형', bottom: '정답 맞추기', direction: 'qa', path: 'short', type: 'QA' }
 ]
 
-export default function QuizViewPage({ quizSet }) {
+export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
   const [showEditModal, setShowEditModal] = useState(false)
+  const [isCopying, setIsCopying] = useState(false)
+  const [progressMap, setProgressMap] = useState(progresses ?? {})
   const router = useRouter()
-  const progress = quizSet.progress || {}
   const total = quizSet.questions.length
-  const isOwner = quizSet.currentUserId === quizSet.creatorId
+  const isOwner = currentUserId === quizSet.creatorId
 
   // 삭제
   const handleDelete = async () => {
     if (confirm('정말 삭제할까요?')) {
       await axios.delete(`/api/quizsets/${quizSet.id}`)
-      router.push('/')
+      router.push('/myquiz')
     }
   }
 
-  // 모드별 카드 UI
-  const renderModeCard = (mode) => {
-    if (quizSet.type !== 'WORD' && mode.key !== 'CHOICE') return null
+  // 내 퀴즈로 복사
+  const handleCopy = async () => {
+    if (isCopying) return
+    setIsCopying(true)
+    const res = await axios.post(`/api/quizsets/${quizSet.id}/share`)
+    if (res.status === 201) {
+      alert('내 퀴즈로 복사되었습니다! 내 퀴즈 목록으로 이동합니다.')
+      router.push('/myquiz')
+    } else {
+      setIsCopying(false)
+      alert('복사 실패')
+    }
+  }
 
-    const prog = progress[mode.key] || null
+  // 모드별 카드
+  const renderModeCard = (mode) => {
+    if (mode.type === 'WORD' && quizSet.type !== 'WORD') return null
+    if (mode.type === 'QA' && quizSet.type !== 'QA') return null
+
+    const prog = progressMap[mode.key] || null
     const current = prog?.currentIndex ?? 0
     const finished = current >= total
 
-    // 진행도
-    const percent = Math.round((current / total) * 100)
     let actionLabel = '시작'
     let action
 
@@ -51,7 +67,12 @@ export default function QuizViewPage({ quizSet }) {
         await axios.put(`/api/quizsets/${quizSet.id}/progress?type=${mode.key}`, {
           currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder
         })
-        location.reload()
+        // 새로고침하지 말고 진행도만 갱신
+        setProgressMap(prev => ({
+          ...prev,
+          [mode.key]: { currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder }
+        }))
+        router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
       }
     } else if (!prog || current === 0) {
       actionLabel = '시작'
@@ -60,11 +81,14 @@ export default function QuizViewPage({ quizSet }) {
         await axios.put(`/api/quizsets/${quizSet.id}/progress?type=${mode.key}`, {
           currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder
         })
+        setProgressMap(prev => ({
+          ...prev,
+          [mode.key]: { currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder }
+        }))
         router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
       }
     }
 
-    // 카드
     return (
       <div
         key={mode.key}
@@ -75,23 +99,17 @@ export default function QuizViewPage({ quizSet }) {
         `}
         style={{ minWidth: 0 }}
       >
-        {/* 상단: "뜻 맞추기"/"단어 맞추기" */}
         <div className="mb-1 font-bold text-base sm:text-lg text-[var(--text-color)]">{mode.top}</div>
-        {/* 하단: "4지선다"/"단답형" */}
         <div className="text-xs text-gray-500 mb-4">{mode.bottom}</div>
-
-        {/* 진행도 */}
         <div className="flex items-center gap-2 mb-2">
-  <div className="flex-1 bg-gray-200 dark:bg-zinc-500 rounded-full h-2 overflow-hidden">
-    <div
-      className="h-2 rounded-full bg-[var(--button-bg)] transition-all"
-      style={{ width: `${((current + 1) / total) * 100}%` }}
-    />
-  </div>
-  <span className="text-xs font-semibold min-w-max ml-2">{current + 1} / {total}</span>
-</div>
-
-        {/* 버튼 (항상 파란색) */}
+          <div className="flex-1 bg-gray-200 dark:bg-zinc-500 rounded-full h-2 overflow-hidden">
+            <div
+              className="h-2 rounded-full bg-[var(--button-bg)] transition-all"
+              style={{ width: `${(current / total) * 100}%` }}
+            />
+          </div>
+          <span className="text-xs font-semibold min-w-max ml-2">{current} / {total}</span>
+        </div>
         <button
           className={`
             w-full mt-1 py-2 rounded-lg font-bold text-sm
@@ -136,10 +154,27 @@ export default function QuizViewPage({ quizSet }) {
           <span className="rounded bg-[var(--input-bg)] px-2 py-1 font-semibold">{total} 문제</span>
         </div>
 
-        {/* 모드 카드: 그리드(반응형) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
-          {MODES.map(renderModeCard)}
-        </div>
+        {!isOwner && (
+          <div className="mb-8">
+            <button
+              onClick={handleCopy}
+              className="w-full py-3 rounded-xl bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white text-lg font-bold shadow transition"
+              disabled={isCopying}
+            >
+              {isCopying ? "복사 중..." : "내 퀴즈로 복사"}
+            </button>
+          </div>
+        )}
+
+        {/* 내 퀴즈일 때만 모드카드 */}
+        {isOwner && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
+            {MODES.filter(mode =>
+              (quizSet.type === 'WORD' && mode.type === 'WORD') ||
+              (quizSet.type === 'QA' && mode.type === 'QA')
+            ).map(renderModeCard)}
+          </div>
+        )}
 
         {/* 문제 카드 목록 */}
         <div className="border-t border-[var(--border-color)] pt-7 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -165,7 +200,7 @@ export default function QuizViewPage({ quizSet }) {
           ))}
         </div>
 
-        {/* 하단 액션 */}
+        {/* 하단 액션 (내 퀴즈일 때만) */}
         {isOwner && (
           <div className="flex flex-col sm:flex-row gap-2 justify-end mt-8">
             <button

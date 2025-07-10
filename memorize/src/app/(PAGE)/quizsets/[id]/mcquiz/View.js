@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 
 export default function MCQuizPage() {
@@ -10,6 +10,8 @@ export default function MCQuizPage() {
   const direction = searchParams.get('direction') || 'word2mean'
   const router = useRouter()
 
+  // 문제집/타입 정보
+  const [quizType, setQuizType] = useState(null) // 'WORD' | 'QA'
   const [questions, setQuestions] = useState([])
   const [shuffledOrder, setShuffledOrder] = useState([])
   const [current, setCurrent] = useState(0)
@@ -19,53 +21,79 @@ export default function MCQuizPage() {
   const [incorrects, setIncorrects] = useState([])
   const [options, setOptions] = useState([])
 
-  // type 결정 (방향에 따라)
-  const progressType = direction === 'mean2word' ? 'REVERSE_CHOICE' : 'CHOICE'
-
+  // 1. 문제집 정보 먼저 받아오기 (quizType 필수)
   useEffect(() => {
-    const fetch = async () => {
+    const fetchQuiz = async () => {
       const res = await axios.get(`/api/quizsets/${id}`)
-      const quiz = res.data
-      const qs = quiz.questions
-      const progress = (quiz.progress && quiz.progress[progressType]) || {}
+      setQuizType(res.data.type)
+      setQuestions(res.data.questions)
+    }
+    fetchQuiz()
+  }, [id])
 
-      setQuestions(qs)
+  // 2. 문제+진행도 불러오기 (quizType 먼저 받아와야 함)
+  useEffect(() => {
+    if (!quizType || questions.length === 0) return
 
-      if (progress.shuffledOrder && progress.currentIndex != null) {
-        setShuffledOrder(progress.shuffledOrder)
-        setCurrent(progress.currentIndex)
-        setIncorrects(progress.incorrects || [])
-      } else {
-        const order = [...Array(qs.length).keys()].sort(() => Math.random() - 0.5)
-        setShuffledOrder(order)
-        setCurrent(0)
-        setIncorrects([])
+    // progressType 결정
+    const progressType =
+      quizType === 'QA'
+        ? 'QA_CHOICE'
+        : (direction === 'mean2word' ? 'REVERSE_CHOICE' : 'CHOICE')
+
+    let order = [...Array(questions.length).keys()].sort(() => Math.random() - 0.5)
+    let cur = 0
+    let incs = []
+
+    // 진행도 fetch
+    const fetchProgress = async () => {
+      try {
+        const progRes = await axios.get(`/api/quizsets/${id}/progress?type=${progressType}`)
+        const progArr = progRes.data.progresses || []
+        const prog = progArr.find(p => p.type === progressType)?.data
+        if (prog && prog.shuffledOrder && prog.currentIndex != null) {
+          order = prog.shuffledOrder
+          cur = prog.currentIndex
+          incs = prog.incorrects || []
+        } else {
+          await axios.put(`/api/quizsets/${id}/progress?type=${progressType}`, {
+            currentIndex: 0, shuffledOrder: order, incorrects: []
+          })
+        }
+      } catch (e) {
         await axios.put(`/api/quizsets/${id}/progress?type=${progressType}`, {
-          currentIndex: 0,
-          shuffledOrder: order,
-          incorrects: [],
+          currentIndex: 0, shuffledOrder: order, incorrects: []
         })
       }
+      setShuffledOrder(order)
+      setCurrent(cur)
+      setIncorrects(incs)
     }
-    fetch()
-  }, [id, direction, progressType])
+    fetchProgress()
+    // eslint-disable-next-line
+  }, [quizType, questions, id, direction])
 
-  const q = questions && shuffledOrder && typeof shuffledOrder[current] !== "undefined"
+  // 현재 문제
+  const q = (questions && shuffledOrder && typeof shuffledOrder[current] !== "undefined")
     ? questions[shuffledOrder[current]]
     : undefined
 
+  // 3. 선택지 생성
   useEffect(() => {
     if (!q) return
-    // 옵션 랜덤 생성
-    const allAnswers = [...new Set(questions.map(q => (
-      direction === 'mean2word' ? q.content : q.answer
-    )))]
-    const answer = direction === 'mean2word' ? q.content : q.answer
+    let answer, allAnswers
+    if (quizType === 'QA') {
+      answer = q.answer
+      allAnswers = [...new Set(questions.map(q => q.answer))]
+    } else {
+      answer = direction === 'mean2word' ? q.content : q.answer
+      allAnswers = [...new Set(questions.map(q => (direction === 'mean2word' ? q.content : q.answer)))]
+    }
     const filtered = allAnswers.filter(a => a !== answer).sort(() => Math.random() - 0.5).slice(0, 3)
     setOptions(shuffle([...filtered, answer]))
     setSelected(null)
     setShowResult(false)
-  }, [current, questions, q, direction])
+  }, [current, questions, q, direction, quizType])
 
   const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
 
@@ -75,14 +103,26 @@ export default function MCQuizPage() {
     setShowResult(true)
   }
 
+  // progressType 항상 quizType에 맞춰서 사용
+  const getProgressType = () => (
+    quizType === 'QA'
+      ? 'QA_CHOICE'
+      : (direction === 'mean2word' ? 'REVERSE_CHOICE' : 'CHOICE')
+  )
+
+  // 다음 문제
   const next = async () => {
-    const answer = direction === 'mean2word' ? q.content : q.answer
+    let answer
+    if (quizType === 'QA') {
+      answer = q.answer
+    } else {
+      answer = direction === 'mean2word' ? q.content : q.answer
+    }
     const isCorrect = selected === answer
     const newIncorrects = !isCorrect ? [...incorrects, shuffledOrder[current]] : incorrects
-    setIncorrects(newIncorrects)
 
     const nextIndex = current + 1
-    await axios.put(`/api/quizsets/${id}/progress?type=${progressType}`, {
+    await axios.put(`/api/quizsets/${id}/progress?type=${getProgressType()}`, {
       currentIndex: nextIndex,
       shuffledOrder,
       incorrects: newIncorrects,
@@ -94,11 +134,13 @@ export default function MCQuizPage() {
     } else {
       setCurrent(nextIndex)
     }
+    setIncorrects(newIncorrects)
   }
 
+  // 다시 시작
   const handleRestart = async () => {
     const newOrder = [...Array(questions.length).keys()].sort(() => Math.random() - 0.5)
-    await axios.put(`/api/quizsets/${id}/progress?type=${progressType}`, {
+    await axios.put(`/api/quizsets/${id}/progress?type=${getProgressType()}`, {
       currentIndex: 0,
       shuffledOrder: newOrder,
       incorrects: [],
@@ -119,8 +161,8 @@ export default function MCQuizPage() {
     window.speechSynthesis.speak(utterance)
   }
 
-  // === 로딩 상태 ===
-  if (!q && !finished) {
+  // === 로딩 ===
+  if (quizType === null || questions.length === 0 || !q && !finished) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-xl" style={{ color: 'var(--text-color)' }}>
         불러오는 중…
@@ -146,13 +188,19 @@ export default function MCQuizPage() {
                     <div>
                       <span className="font-bold">문제:</span>
                       <span className="ml-2 font-semibold text-[var(--subtext-color)]">
-                        {direction === 'mean2word' ? questions[i]?.answer : questions[i]?.content}
+                        {quizType === 'QA'
+                          ? questions[i]?.content
+                          : (direction === 'mean2word' ? questions[i]?.answer : questions[i]?.content)
+                        }
                       </span>
                     </div>
                     <div>
                       <span className="font-bold">정답:</span>
                       <span className="ml-2 font-bold" style={{ color: 'var(--danger-text)' }}>
-                        {direction === 'mean2word' ? questions[i]?.content : questions[i]?.answer}
+                        {quizType === 'QA'
+                          ? questions[i]?.answer
+                          : (direction === 'mean2word' ? questions[i]?.content : questions[i]?.answer)
+                        }
                       </span>
                     </div>
                   </div>
@@ -172,7 +220,12 @@ export default function MCQuizPage() {
   }
 
   // === 퀴즈 풀이 화면 ===
-  const prompt = direction === 'mean2word' ? q.answer : q.content
+  let prompt
+  if (quizType === 'QA') {
+    prompt = q.content
+  } else {
+    prompt = direction === 'mean2word' ? q.answer : q.content
+  }
   const total = questions.length
 
   return (
@@ -204,11 +257,14 @@ export default function MCQuizPage() {
         {/* 선택지 */}
         <div className="grid gap-4">
           {options.map((option, idx) => {
+            let answer
+            if (quizType === 'QA') {
+              answer = q.answer
+            } else {
+              answer = direction === 'mean2word' ? q.content : q.answer
+            }
             const isSelected = selected === option
-            const answer = direction === 'mean2word' ? q.content : q.answer
             const isCorrect = option === answer
-            // 선택 후: 정답(파랑), 오답(빨강), 나머지(흐림)
-            // 선택 전: 호버시 약간 어두운 배경/글씨(부드럽게)
             return (
               <button
                 key={idx}
