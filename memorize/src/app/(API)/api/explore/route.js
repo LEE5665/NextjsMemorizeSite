@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/app/libs/prismadb'
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url)
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = 8
+  const limit = 12
   const skip = (page - 1) * limit
 
   try {
@@ -17,6 +15,7 @@ export async function GET(req) {
         include: {
           creator: { select: { name: true } },
           questions: true,
+
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -30,6 +29,7 @@ export async function GET(req) {
       questionCount: quiz.questions.length,
       creatorName: quiz.creator.name,
       createdAt: quiz.createdAt,
+      type: quiz.type
     }))
 
     return NextResponse.json({ quizSets: result, total })

@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/app/libs/prismadb'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/(API)/api/auth/[...nextauth]/route'
-
-const prisma = new PrismaClient()
 
 export async function GET(req) {
   const session = await getServerSession(authOptions)
@@ -39,6 +37,11 @@ export async function GET(req) {
       prisma.folder.findMany({
         where: { creatorId: session.user.id },
         orderBy: { [folderSort]: folderDir },
+        include: {
+          _count: {
+            select: { quizSets: true },
+          },
+        },
       }),
     ])
 

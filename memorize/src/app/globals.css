@@ -1,9 +1,5 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 /* 
 @theme inline {
   --color-background: var(--background);
@@ -12,27 +8,94 @@
   --font-mono: var(--font-geist-mono);
 } */
 
+/* 헤더 전용 */
+:root {
+  --header-bg: #ffffff;
+  --header-border: #d4d4d4;
+  --header-text: #111111;
+  --header-link: #2563eb;
+  --header-link-hover: #1e40af;
+}
+
+:root.dark {
+  --header-bg: #1f2125;
+  --header-border: #3c3f44;
+  --header-text: #f0f0f0;
+  --header-link: #60a5fa;
+  --header-link-hover: #93c5fd;
+}
+
+/* 뱃지 전용 */
+:root {
+  --badge-bg: #e0e7ff;
+  --badge-text: #4338ca;
+  --badge-bg-public: #dcfce7;
+  --badge-text-public: #15803d;
+  --badge-bg-private: #e5e7eb;
+  --badge-text-private: #374151;
+}
+
+:root.dark {
+  --badge-bg: #37384a;
+  --badge-text: #a5b4fc;
+  --badge-bg-public: #14532d;
+  --badge-text-public: #86efac;
+  --badge-bg-private: #4b5563;
+  --badge-text-private: #d1d5db;
+}
+
+/* 전역 설정 */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --bg-color: #ffffff;
+  --text-color: #111111;
+  --input-bg: #f2f2f2;
+  --button-bg: #798aa5;
+  --button-hover-bg: #475679; 
+  --border-color: #d4d4d4;
+
+  --button-text: #ffffff;
+  --selected-bg: #3b82f6;
+  --selected-text: #ffffff;
+  --subtext-color: #6b7280;
+}
+
+:root.dark {
+  --background: #1a1b1e;
+  --foreground: #f0f0f0;
+
+  --bg-color: #1e1e20;
+  --text-color: #f5f5f5;
+  --input-bg: #232325;
+  --button-bg: #424346;
+  --button-hover-bg: #6a6b6e;
+  --border-color: #5a5b5c;
+
+  --button-text: #ffffff;
+  --selected-bg: #60a5fa;
+  --selected-text: #ffffff;
+
+  --subtext-color: #9ca3af;
+}
+
+:root {
+  --action-text: #6b7280;           /* 기본 회색 텍스트 (예: 수정, 비번 변경, 회원탈퇴) */
+  --action-hover: #374151;          /* hover 시 강조되는 회색 */
+  --danger-text: #be9d9d;           /* 탈퇴 버튼 */
+  --danger-hover: #cf5151;          /* 탈퇴 hover */
+}
+:root.dark {
+  --action-text: #9ca3af;
+  --action-hover: #d1d5db;
+  --danger-text: #f87171;
+  --danger-hover: #f87171;
+}
+
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-}
-
-:root {
-  --bg-color: #ffffff;
-  --text-color: #000000;
-  --input-bg: #f8f8f8;
-  --button-bg: #4f46e5;
-  --button-hover-bg: #3730a3;
-  --border-color: #ccc;
-}
-:root.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --bg-color: #121212;
-  --text-color: #eeeeee;
-  --input-bg: #2a2a2a;
-  --button-bg: #5a5aff;
-  --button-hover-bg: #3a3aff;
-  --border-color: #555;
 }

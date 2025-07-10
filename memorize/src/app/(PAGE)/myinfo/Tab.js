@@ -18,7 +18,10 @@ export default function MyInfoTab({ initialUser }) {
       return
     }
     try {
-      await axios.put('/api/user/password', { current: passwords.current, new: passwords.new })
+      await axios.put('/api/user/password', {
+        current: passwords.current,
+        new: passwords.new,
+      })
       alert('비밀번호가 변경되었습니다.')
       setShowPasswordForm(false)
       setPasswords({ current: '', new: '', confirm: '' })
@@ -33,6 +36,7 @@ export default function MyInfoTab({ initialUser }) {
       await update({ name: newName })
       setUser((prev) => ({ ...prev, name: newName }))
       setShowNameEdit(false)
+      location.reload()
     } catch (err) {
       alert(err.response?.data?.error || '닉네임 변경 실패')
     }
@@ -46,85 +50,106 @@ export default function MyInfoTab({ initialUser }) {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-md">
-      <h1 className="text-2xl font-bold">내 정보</h1>
+    <div className="max-w-xl mx-auto p-6 bg-[--bg-color] border border-[--border-color] rounded-xl shadow space-y-8">
+      <h1 className="text-2xl font-bold text-[--text-color]">내 정보</h1>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block font-medium mb-1">아이디 (이메일)</label>
-          <p className="text-zinc-700 dark:text-zinc-300">{user.email}</p>
-        </div>
+      {/* 이메일 */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-[--text-color]">이메일</label>
+        <div className="text-sm text-[--text-color]">{user.email}</div>
+      </div>
 
-        <div>
-          <label className="block font-medium mb-1">닉네임</label>
-          {showNameEdit ? (
-            <div className="flex gap-2">
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="border px-3 py-1 rounded flex-1"
-              />
-              <button onClick={handleUpdateName} className="bg-blue-600 text-white px-3 py-1 rounded">저장</button>
-              <button onClick={() => setShowNameEdit(false)} className="text-gray-500 px-2">취소</button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <span>{user.name}</span>
-              <button onClick={() => setShowNameEdit(true)} className="text-blue-600 text-sm underline">수정</button>
-            </div>
-          )}
-        </div>
-        {user.password && (
-          <div>
+      {/* 닉네임 */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-[--text-color]">닉네임</label>
+        {showNameEdit ? (
+          <div className="flex gap-2">
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-md border border-[--border-color] bg-[--input-bg] text-[--text-color] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[--button-bg]"
+            />
             <button
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="text-blue-600 text-sm underline"
+              onClick={handleUpdateName}
+              className="bg-[--button-bg] hover:bg-[--button-hover-bg] text-[--button-text] text-sm px-4 py-2 rounded-md shadow transition"
             >
-              비밀번호 변경
+              저장
             </button>
-            {showPasswordForm && (
-              <div className="space-y-2 mt-2">
-                <input
-                  type="password"
-                  placeholder="현재 비밀번호"
-                  value={passwords.current}
-                  onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                  className="w-full border px-3 py-2 rounded"
-                />
-                <input
-                  type="password"
-                  placeholder="새 비밀번호"
-                  value={passwords.new}
-                  onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                  className="w-full border px-3 py-2 rounded"
-                />
-                <input
-                  type="password"
-                  placeholder="새 비밀번호 확인"
-                  value={passwords.confirm}
-                  onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                  className="w-full border px-3 py-2 rounded"
-                />
-                <button
-                  onClick={handleChangePassword}
-                  className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-                >
-                  변경하기
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => setShowNameEdit(false)}
+              className="text-sm text-[--action-text] hover:text-[--action-hover] px-2"
+            >
+              취소
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-[--text-color]">{user.name}</span>
+            <button
+              onClick={() => setShowNameEdit(true)}
+              className="text-xs text-[--action-text] hover:text-[--action-hover] underline"
+            >
+              수정
+            </button>
           </div>
         )}
       </div>
 
-      <hr />
+      {/* 비밀번호 변경 */}
+      {user.password && (
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowPasswordForm(!showPasswordForm)}
+            className="text-sm text-[--action-text] hover:text-[--action-hover] underline"
+          >
+            비밀번호 변경
+          </button>
 
-      <button
-        onClick={handleDeleteAccount}
-        className="text-red-600 underline"
-      >
-        회원 탈퇴
-      </button>
+          {showPasswordForm && (
+            <div className="space-y-3">
+              <input
+                type="password"
+                placeholder="현재 비밀번호"
+                value={passwords.current}
+                onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                className="w-full px-3 py-2 rounded-md border border-[--border-color] bg-[--input-bg] text-[--text-color] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[--button-bg]"
+              />
+              <input
+                type="password"
+                placeholder="새 비밀번호"
+                value={passwords.new}
+                onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                className="w-full px-3 py-2 rounded-md border border-[--border-color] bg-[--input-bg] text-[--text-color] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[--button-bg]"
+              />
+              <input
+                type="password"
+                placeholder="새 비밀번호 확인"
+                value={passwords.confirm}
+                onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                className="w-full px-3 py-2 rounded-md border border-[--border-color] bg-[--input-bg] text-[--text-color] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[--button-bg]"
+              />
+              <button
+                onClick={handleChangePassword}
+                className="w-full px-4 py-2 rounded-md bg-[--button-bg] hover:bg-[--button-hover-bg] text-white font-semibold shadow transition"
+              >
+                변경하기
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <hr className="border-[--border-color]" />
+
+      {/* 회원 탈퇴 */}
+      <div>
+        <button
+          onClick={handleDeleteAccount}
+          className="text-sm text-[--danger-text] hover:text-[--danger-hover] underline"
+        >
+          회원 탈퇴
+        </button>
+      </div>
     </div>
   )
 }

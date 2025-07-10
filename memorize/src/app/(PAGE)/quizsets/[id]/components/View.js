@@ -63,7 +63,7 @@ export default function QuizViewPage({ quizSet }) {
   const isOwner = quizSet.currentUserId === quizSet.creatorId
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-0 sm:p-6">
       {showEditModal && (
         <QuizSetModal
           onClose={handleModalClose}
@@ -72,86 +72,115 @@ export default function QuizViewPage({ quizSet }) {
         />
       )}
 
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{quizSet.title}</h1>
-        <span
-          className={`text-sm px-2 py-1 rounded-full ${quizSet.isPublic
-            ? 'bg-green-100 text-green-700'
-            : 'bg-gray-200 text-gray-600'
-            }`}
-        >
-          {quizSet.isPublic ? '공개' : '비공개'}
-        </span>
-      </div>
+      {/* 퀴즈 메인 카드 */}
+      <div className="rounded-2xl shadow-lg bg-[var(--bg-color)] border border-[var(--border-color)] px-8 py-8 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-color)]">{quizSet.title}</h1>
+          <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full
+            ${quizSet.isPublic
+              ? 'bg-[var(--badge-bg-public)] text-[var(--badge-text-public)]'
+              : 'bg-[var(--badge-bg-private)] text-[var(--badge-text-private)]'}
+          `}>
+            {quizSet.isPublic ? '공개' : '비공개'}
+          </span>
+        </div>
 
-      {(hasStarted || isCompleted) && isOwner && (
-        <div className="mb-6 p-4 rounded-xl bg-[var(--input-bg)] shadow space-y-2">
-          {!isCompleted && (
-            <p className="text-gray-500 text-sm">진행: {current} / {total}</p>
-          )}
-          <div className="flex gap-4">
-            {hasStarted && (
-              <button onClick={handleResume} className="text-sm text-blue-600 hover:underline">
-                이어서 하기
-              </button>
+        <div className="flex flex-wrap gap-2 text-sm mb-6">
+          <span className="rounded-lg bg-[var(--input-bg)] px-3 py-1 text-[var(--text-color)] font-semibold">{quizSet.type === 'WORD' ? '단어장' : '일반문제'}</span>
+          <span className="rounded-lg bg-[var(--input-bg)] px-3 py-1 text-[var(--text-color)] font-semibold">{total}문제</span>
+        </div>
+
+        {/* 진행/버튼 */}
+        {(hasStarted || isCompleted) && isOwner && (
+          <div className="mb-6 p-4 rounded-xl bg-[var(--input-bg)] shadow-inner space-y-2">
+            {!isCompleted && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-[var(--subtext-color)]">진행</span>
+                <div className="flex-1 h-2 bg-gray-200 dark:bg-zinc-700 rounded">
+                  <div
+                    className="h-2 rounded bg-blue-400 dark:bg-blue-600 transition-all"
+                    style={{ width: `${(current / total) * 100}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-[var(--subtext-color)]">{current}/{total}</span>
+              </div>
             )}
-            {current > 0 && (
-              <button onClick={handleRestart} className="text-sm text-blue-600 hover:underline">
-                새로 시작하기
-              </button>
-            )}
+            <div className="flex gap-3 mt-2">
+              {hasStarted && (
+                <button onClick={handleResume} className="rounded-lg px-3 py-1 text-blue-600 dark:text-blue-400 hover:underline transition text-sm">
+                  이어서 하기
+                </button>
+              )}
+              {current > 0 && (
+                <button onClick={handleRestart} className="rounded-lg px-3 py-1 text-[var(--subtext-color)] hover:underline transition text-sm">
+                  새로 시작
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isOwner ? (
-        <button
-          className="w-full mb-8 px-4 py-3 rounded-xl font-medium bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
-          onClick={handleStart}
-        >
-          4지선다 퀴즈 시작
-        </button>
-      ) : (
-        <button
-          className="w-full mb-8 px-4 py-3 rounded-xl font-medium bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
-          onClick={handleShare}
-        >
-          공유받기
-        </button>
-      )}
-
-      {quizSet.questions.map((q, idx) => (
-        <div key={idx} className="mb-4 p-4 bg-[var(--input-bg)] rounded-xl shadow">
-          {quizSet.type === 'WORD' ? (
-            <>
-              <p><span className="font-semibold">단어:</span> {q.content}</p>
-              <p><span className="font-semibold">뜻:</span> {q.answer}</p>
-            </>
+        {/* 주요 액션 */}
+        <div className="flex gap-2 mt-2 mb-8">
+          {isOwner ? (
+            <button
+              className="flex-1 px-4 py-3 rounded-xl font-medium bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] shadow transition"
+              onClick={handleStart}
+            >
+              4지선다 퀴즈 시작
+            </button>
           ) : (
-            <>
-              <p><span className="font-semibold">문제:</span> {q.content}</p>
-              <p><span className="font-semibold">답:</span> {q.answer}</p>
-            </>
+            <button
+              className="flex-1 px-4 py-3 rounded-xl font-medium bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] shadow transition"
+              onClick={handleShare}
+            >
+              공유받기
+            </button>
           )}
         </div>
-      ))}
 
-      {isOwner && (
-        <div className="flex justify-end gap-3 mt-10">
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="px-4 py-2 rounded bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-sm font-medium"
-          >
-            수정
-          </button>
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 rounded bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-sm font-medium"
-          >
-            삭제
-          </button>
+        {/* 문제 카드 목록 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          {quizSet.questions.map((q, idx) => (
+            <div
+              key={idx}
+              className="p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow hover:scale-[1.02] transition"
+            >
+              {quizSet.type === 'WORD' ? (
+                <>
+                  <div className="font-bold text-base mb-2 text-blue-600 dark:text-blue-300">단어</div>
+                  <div className="text-xl font-extrabold mb-3 text-[var(--text-color)]">{q.content}</div>
+                  <div className="text-[var(--subtext-color)]">뜻: <span className="font-semibold">{q.answer}</span></div>
+                </>
+              ) : (
+                <>
+                  <div className="font-bold text-base mb-2 text-indigo-600 dark:text-indigo-300">문제</div>
+                  <div className="text-lg font-extrabold mb-3 text-[var(--text-color)]">{q.content}</div>
+                  <div className="text-[var(--subtext-color)]">정답: <span className="font-semibold">{q.answer}</span></div>
+                </>
+              )}
+            </div>
+          ))}
         </div>
-      )}
+
+        {/* 하단 액션 */}
+        {isOwner && (
+          <div className="flex gap-3 justify-end mt-10">
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="px-5 py-2 rounded-xl bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-sm font-semibold text-[var(--button-text)] shadow transition"
+            >
+              수정
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-5 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white shadow transition"
+            >
+              삭제
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

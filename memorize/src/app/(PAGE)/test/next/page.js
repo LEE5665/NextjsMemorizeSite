@@ -1,20 +1,12 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function CounterPage() {
   const [count, setCount] = useState(0)
   const router = useRouter()
   const searchParams = useSearchParams()
-
-    useEffect(() => {
-      console.log('마운트됨')
-  
-      return () => {
-        console.log('언마운트됨')
-      }
-    }, [])
 
   const handleQueryChange = () => {
     const current = new URLSearchParams(searchParams.toString())

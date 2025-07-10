@@ -3,7 +3,7 @@ import View from './component/View' // CSR
 
 export default function MainLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-color)] text-[var(--text-color)]">
+    <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 overflow-y-auto">
         <View />

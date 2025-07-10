@@ -11,7 +11,7 @@ export default function ExplorePage() {
       <Header />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-8 bg-white dark:bg-zinc-900">
+        <main className="flex-1 p-8">
           <ExploreTab />
         </main>
       </div>

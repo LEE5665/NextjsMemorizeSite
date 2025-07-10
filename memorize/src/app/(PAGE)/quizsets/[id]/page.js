@@ -15,7 +15,7 @@ export default async function QuizViewServerPage({ params }) {
   const quizSet = res.data
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-color)] text-[var(--text-color)]">
+    <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 overflow-y-auto">
         <View quizSet={quizSet} />

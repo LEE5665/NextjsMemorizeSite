@@ -102,35 +102,40 @@ export default function MCQuizPage() {
 
   const speak = (text) => {
     window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
+    const utterance = new window.SpeechSynthesisUtterance(text)
     const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text)
     utterance.lang = isKorean ? 'ko-KR' : 'en-US'
     window.speechSynthesis.speak(utterance)
-    console.log(isKorean)
   }
 
-  if (questions.length === 0) return <p className="p-6">불러오는 중…</p>
+  if (questions.length === 0) return (
+    <div className="flex items-center justify-center min-h-[50vh] text-xl" style={{ color: 'var(--text-color)' }}>
+      불러오는 중…
+    </div>
+  )
 
   if (finished) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)] px-4">
-        <div className="max-w-xl w-full bg-[var(--input-bg)] p-8 rounded-2xl shadow space-y-6 text-center">
-          <h2 className="text-2xl font-bold">퀴즈 완료!</h2>
-          <p className="text-lg">점수: {questions.length - incorrects.length} / {questions.length}</p>
-
+        <div className="max-w-xl w-full bg-[var(--input-bg)] p-8 rounded-2xl shadow-xl space-y-6 text-center border border-[var(--border-color)]">
+          <h2 className="text-2xl font-bold mb-3">퀴즈 완료!</h2>
+          <p className="text-lg">점수: <span className="font-bold text-blue-500">{questions.length - incorrects.length} / {questions.length}</span></p>
           {incorrects.length > 0 && (
-            <div className="mt-4 text-left">
+            <div className="mt-6 text-left">
               <h3 className="font-bold mb-2 text-red-500">틀린 문제</h3>
               {incorrects.map(i => (
-                <div key={i} className="text-sm mb-2">
-                  ❌ {questions[i].content}<br />
-                  <span className="text-gray-500">정답: {questions[i].answer}</span>
+                <div key={i} className="mb-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/50 border border-red-300 dark:border-red-700 text-sm">
+                  ❌ <span className="font-semibold">{questions[i].content}</span><br />
+                  <span className="text-red-400">정답: {questions[i].answer}</span>
                 </div>
               ))}
             </div>
           )}
 
-          <button onClick={handleRestart} className="mt-4 px-4 py-2 bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white rounded">
+          <button
+            onClick={handleRestart}
+            className="mt-8 px-6 py-2 rounded-xl font-semibold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+          >
             다시 하기
           </button>
         </div>
@@ -138,57 +143,68 @@ export default function MCQuizPage() {
     )
   }
 
+  // 현재 문제 데이터
   const isWrong = showResult && selected !== null && selected !== q.answer
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)] px-4">
-      <div className="max-w-xl w-full bg-[var(--input-bg)] p-8 rounded-2xl shadow space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">
-            문제 {current + 1} / {questions.length}
-          </h2>
-          {isWrong && (
-            <p className="text-sm text-yellow-300 font-medium">정답: {q.answer}</p>
-          )}
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)] px-2">
+      <div className="w-full max-w-xl bg-[var(--input-bg)] p-8 rounded-2xl shadow-xl border border-[var(--border-color)] space-y-7">
+        {/* 진행도 바 */}
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex-1 bg-gray-200 dark:bg-zinc-400 rounded-full h-2">
+            <div
+              className="h-2 rounded-full bg-[var(--button-bg)] transition-all"
+              style={{ width: `${((current + 1) / questions.length) * 100}%` }}
+            />
+          </div>
+          <span className="text-sm font-semibold min-w-max ml-2">{current + 1} / {questions.length}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <p className="text-xl font-medium">{q.content}</p>
+        <div className="flex items-center gap-2 text-lg sm:text-xl font-semibold">
+          <span>{q.content}</span>
           <button
             onClick={() => speak(q.content)}
-            className="text-sm text-blue-500 hover:underline"
-            title="읽어주기"
+            className="text-blue-500 hover:text-blue-700"
+            title="문제 읽기"
           >
             🔊
           </button>
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid gap-4">
           {options.map((option, idx) => {
             const isSelected = selected === option
-
+            const isCorrect = option === q.answer
+            // 정답: 파란색, 오답: 빨간색, 선택X: input-bg
             return (
-              <div key={idx} className="relative flex items-center gap-2">
-                <button
-                  disabled={selected !== null}
-                  onClick={() => handleSelect(option)}
-                  className={`flex-1 px-4 py-2 rounded-xl border text-left transition font-medium ${isSelected
-                      ? option === q.answer
-                        ? 'bg-green-500 text-white border-green-600'
+              <button
+                key={idx}
+                disabled={selected !== null}
+                onClick={() => handleSelect(option)}
+                className={`
+                  w-full px-4 py-3 rounded-xl font-semibold border transition
+                  flex items-center gap-3 shadow-sm
+                  ${selected
+                    ? isSelected
+                      ? isCorrect
+                        ? 'bg-[var(--button-bg)] text-white border-[var(--button-bg)]'
                         : 'bg-red-500 text-white border-red-600'
-                      : 'bg-white dark:bg-zinc-700 border-[var(--border-color)] hover:bg-gray-100 dark:hover:bg-zinc-600'
-                    }`}
-                >
-                  {option}
-                </button>
-                <button
-                  onClick={() => speak(option)}
+                      : isCorrect
+                        ? 'bg-[var(--button-bg)] text-white border-[var(--button-bg)] opacity-80'
+                        : 'bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] opacity-60'
+                    : 'bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] hover:bg-[var(--button-bg)] hover:text-white'}
+                `}
+                style={{
+                  fontSize: '1rem'
+                }}
+              >
+                <span className="flex-1 text-left">{option}</span>
+                <span
+                  onClick={e => { e.stopPropagation(); speak(option); }}
                   title="읽기"
-                  className="text-sm px-2 py-1 text-blue-500 hover:text-blue-700"
-                >
-                  🔊
-                </button>
-              </div>
+                  className="ml-2 cursor-pointer text-blue-400 hover:text-blue-600 text-base"
+                >🔊</span>
+              </button>
             )
           })}
         </div>
@@ -196,17 +212,17 @@ export default function MCQuizPage() {
         {!selected && (
           <button
             onClick={() => handleSelect('')}
-            className="text-sm text-gray-500 underline mt-2"
+            className="block mx-auto mt-2 text-sm text-gray-400 underline"
           >
             잘 모르겠습니다
           </button>
         )}
 
         {selected !== null && (
-          <div className="text-center mt-4">
+          <div className="text-center mt-6">
             <button
               onClick={next}
-              className="px-4 py-2 bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white rounded"
+              className="px-6 py-2 rounded-xl font-semibold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white shadow transition"
             >
               다음 문제 →
             </button>

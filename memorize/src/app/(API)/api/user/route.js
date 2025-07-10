@@ -3,9 +3,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/(API)/api/auth/[...nextauth]/route'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/app/libs/prismadb'
 
 // GET /api/user - 현재 로그인한 유저 정보 반환
 export async function GET(req) { // req 파라미터 추가
