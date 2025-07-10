@@ -43,7 +43,7 @@ export default function ShortQuizPage() {
       setInput('')
     }
     fetch()
-  }, [id, direction])
+  }, [id, direction, progressType])
 
   if (questions.length === 0) return (
     <div className="flex items-center justify-center min-h-[50vh] text-xl" style={{ color: 'var(--text-color)' }}>

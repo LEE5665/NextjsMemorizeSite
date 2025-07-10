@@ -48,7 +48,7 @@ export default function MCQuizPage() {
       }
     }
     fetch()
-  }, [id, direction])
+  }, [id, direction, progressType])
 
   const q = questions && shuffledOrder && typeof shuffledOrder[current] !== "undefined"
     ? questions[shuffledOrder[current]]
