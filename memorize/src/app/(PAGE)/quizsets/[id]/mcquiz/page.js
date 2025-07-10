@@ -1,6 +1,6 @@
 import Header from '@/app/components/Header' // 서버 컴포넌트
 import Sidebar from '@/app/components/Sidebar' // 서버 컴포넌트
-import View from './component/View' // CSR
+import View from './View' // CSR
 
 export default function MainLayout() {
   return (
