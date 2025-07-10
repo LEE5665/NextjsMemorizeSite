@@ -79,12 +79,12 @@ export default function QuizSetModal({
     <div className="fixed inset-0 z-50 flex justify-center items-center bg-[rgba(0,0,0,0.3)] modal-overlay-fade">
       {/* 카드 */}
       <div
-        className="relative w-full max-w-2xl p-8 rounded-2xl shadow-2xl border bg-[var(--bg-color)] text-[var(--text-color)] border-[var(--border-color)] animate-modal-pop"
+        className="relative w-full max-w-lg sm:max-w-2xl p-3 sm:p-8 rounded-2xl shadow-2xl border bg-[var(--bg-color)] text-[var(--text-color)] border-[var(--border-color)] animate-modal-pop mx-2"
       >
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-6 text-2xl text-[var(--subtext-color)] hover:text-[var(--text-color)] transition"
+          className="absolute top-4 right-4 sm:top-5 sm:right-6 text-2xl text-[var(--subtext-color)] hover:text-[var(--text-color)] transition"
           aria-label="닫기"
         >
           ×
@@ -97,7 +97,7 @@ export default function QuizSetModal({
         {/* ⚡️ form 내부만 스크롤 */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 max-h-[60vh] overflow-y-auto pr-2"
+          className="space-y-5 sm:space-y-6 max-h-[60vh] overflow-y-auto pr-1 sm:pr-2"
         >
           {error && (
             <div className="mb-2 text-red-500 text-sm text-center">{error}</div>
@@ -107,7 +107,7 @@ export default function QuizSetModal({
           <input
             type="text"
             placeholder="퀴즈 제목"
-            className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition"
+            className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition text-base"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -115,7 +115,7 @@ export default function QuizSetModal({
           {/* 유형 선택 (추가 모드에서만) */}
           {!editMode && (
             <select
-              className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition"
+              className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition text-base"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
@@ -136,20 +136,20 @@ export default function QuizSetModal({
           </label>
 
           {/* 문제 입력 */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {questions.map((q, idx) => (
               <div key={idx} className="space-y-2">
                 <input
                   type="text"
                   placeholder={type === 'WORD' ? `단어 ${idx + 1}` : `문제 ${idx + 1}`}
-                  className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition"
+                  className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition text-base"
                   value={q.content}
                   onChange={(e) => handleChange(idx, 'content', e.target.value)}
                 />
                 <input
                   type="text"
                   placeholder={type === 'WORD' ? `뜻 ${idx + 1}` : `정답 ${idx + 1}`}
-                  className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition"
+                  className="w-full p-3 rounded-xl bg-[var(--input-bg)] text-[var(--text-color)] border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--button-bg)] transition text-base"
                   value={q.answer}
                   onChange={(e) => handleChange(idx, 'answer', e.target.value)}
                 />
@@ -158,17 +158,17 @@ export default function QuizSetModal({
           </div>
 
           {/* 버튼 그룹 */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-2 sm:pt-4">
             <button
               type="button"
               onClick={handleAddQuestion}
-              className="flex-1 bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] py-3 rounded-xl font-bold shadow-sm transition"
+              className="w-full sm:w-auto bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] py-2 sm:py-3 px-2 sm:px-6 rounded-xl font-bold shadow-sm transition text-base"
             >
               + 문제 추가
             </button>
             <button
               type="submit"
-              className="flex-1 bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] py-3 rounded-xl font-bold shadow-sm transition"
+              className="w-full sm:w-auto bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] py-2 sm:py-3 px-2 sm:px-6 rounded-xl font-bold shadow-sm transition text-base"
             >
               {submitText}
             </button>
@@ -178,21 +178,21 @@ export default function QuizSetModal({
 
       {/* 모달 애니메이션 스타일 */}
       <style jsx>{`
-      .animate-modal-pop {
-        animation: modal-pop .23s cubic-bezier(.42,1.1,.23,1);
-      }
-      @keyframes modal-pop {
-        0% { opacity: 0; transform: scale(.95);}
-        100% { opacity: 1; transform: scale(1);}
-      }
-      .modal-overlay-fade {
-        animation: overlay-fade .18s cubic-bezier(.42,1.1,.23,1);
-      }
-      @keyframes overlay-fade {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-    `}</style>
+        .animate-modal-pop {
+          animation: modal-pop .23s cubic-bezier(.42,1.1,.23,1);
+        }
+        @keyframes modal-pop {
+          0% { opacity: 0; transform: scale(.95);}
+          100% { opacity: 1; transform: scale(1);}
+        }
+        .modal-overlay-fade {
+          animation: overlay-fade .18s cubic-bezier(.42,1.1,.23,1);
+        }
+        @keyframes overlay-fade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }

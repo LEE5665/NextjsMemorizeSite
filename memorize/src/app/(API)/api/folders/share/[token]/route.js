@@ -23,7 +23,7 @@ export async function GET(req, { params }) {
     if (!folder) throw new Error('폴더 없음')
     const newFolder = await prisma.folder.create({
       data: {
-        name: folder.name + ' [SHARE]',
+        name: folder.name + ' [SHARED]',
         creatorId: session.user.id,
         quizSets: {
           create: folder.quizSets.map((qs) => ({

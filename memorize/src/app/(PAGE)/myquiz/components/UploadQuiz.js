@@ -32,31 +32,32 @@ export default function UploadQuizModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.36)] modal-overlay-fade">
-      <div className="relative w-full max-w-md p-8 rounded-2xl shadow-2xl border bg-[var(--bg-color)] text-[var(--text-color)] border-[var(--border-color)] animate-modal-pop"
+      <div
+        className="relative w-full max-w-xs sm:max-w-md mx-2 p-4 sm:p-8 rounded-2xl shadow-2xl border bg-[var(--bg-color)] text-[var(--text-color)] border-[var(--border-color)] animate-modal-pop"
       >
         <button
           onClick={onClose}
-          className="absolute top-5 right-6 text-2xl text-[var(--subtext-color)] hover:text-[var(--text-color)] transition"
+          className="absolute top-4 right-4 sm:top-5 sm:right-6 text-xl sm:text-2xl text-[var(--subtext-color)] hover:text-[var(--text-color)] transition"
           aria-label="닫기"
         >
           ×
         </button>
 
-        <h2 className="text-2xl font-bold mb-6 text-center">퀴즈 파일 업로드</h2>
+        <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-center">퀴즈 파일 업로드</h2>
 
-        <label className="block mb-5 text-center">
+        <label className="block mb-4 sm:mb-5 text-center">
           <input
             type="file"
             accept=".txt"
             onChange={e => setFile(e.target.files?.[0])}
-            className="w-full p-2 border rounded-lg bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] focus:outline-none"
+            className="w-full p-2 border rounded-lg bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] focus:outline-none text-sm"
           />
         </label>
 
-        <div className="flex justify-center gap-3 pt-3">
+        <div className="flex justify-center gap-2 sm:gap-3 pt-2 sm:pt-3">
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-lg font-bold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] transition"
+            className="px-3 sm:px-6 py-2 rounded-lg font-bold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] transition text-sm sm:text-base"
             type="button"
           >
             취소
@@ -64,7 +65,7 @@ export default function UploadQuizModal({ onClose }) {
           <button
             onClick={handleUpload}
             disabled={!file || uploading}
-            className="px-6 py-2 rounded-lg font-bold shadow-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] transition disabled:opacity-60 disabled:pointer-events-none"
+            className="px-3 sm:px-6 py-2 rounded-lg font-bold shadow-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-[var(--button-text)] transition text-sm sm:text-base disabled:opacity-60 disabled:pointer-events-none"
           >
             {uploading ? '업로드 중...' : '업로드'}
           </button>

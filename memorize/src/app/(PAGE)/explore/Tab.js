@@ -64,13 +64,13 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
       {/* 검색창 */}
       <form
         onSubmit={handleSearch}
-        className="flex items-center gap-2 max-w-md mb-2"
+        className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full max-w-md mb-2"
         autoComplete="off"
       >
         <select
           value={filterType}
           onChange={handleTypeChange}
-          className="rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-2 py-2 text-sm text-[var(--text-color)] font-semibold"
+          className="w-full sm:w-auto rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-2 py-2 text-sm text-[var(--text-color)] font-semibold"
         >
           <option value="all">전체</option>
           <option value="title">제목</option>
@@ -83,16 +83,16 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
             filterType === 'creator'
               ? '제작자명 검색'
               : filterType === 'title'
-              ? '제목 검색'
-              : '제목/제작자 검색'
+                ? '제목 검색'
+                : '제목/제작자 검색'
           }
           onChange={e => setInput(e.target.value)}
-          className="flex-1 rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-3 py-2 text-sm outline-none"
+          className="flex-1 min-w-0 w-full sm:w-auto rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-3 py-2 text-sm outline-none"
           style={{ color: 'var(--text-color)' }}
         />
         <button
           type="submit"
-          className="px-4 py-2 rounded-md bg-[var(--button-bg)] text-[var(--button-text)] font-semibold"
+          className="w-full sm:w-auto px-4 py-2 rounded-md bg-[var(--button-bg)] text-[var(--button-text)] font-semibold"
         >
           검색
         </button>
@@ -132,11 +132,10 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
                 <button
                   key={p}
                   onClick={() => handlePageChange(p)}
-                  className={`px-3 py-1 rounded border text-sm font-semibold transition ${
-                    isActive
+                  className={`px-3 py-1 rounded border text-sm font-semibold transition ${isActive
                       ? 'bg-[var(--button-bg)] text-white'
                       : 'bg-[var(--input-bg)] text-[var(--text-color)] hover:bg-[var(--button-bg)] hover:text-white'
-                  }`}
+                    }`}
                   style={{ borderColor: 'var(--border-color)' }}
                 >
                   {p}

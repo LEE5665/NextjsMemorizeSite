@@ -125,7 +125,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto pt-20 sm:pt-8 px-2 sm:px-6">
+    <div className="max-w-3xl mx-auto pt-16 sm:pt-8 px-2 sm:px-6">
       {showEditModal && (
         <QuizSetModal
           onClose={() => { setShowEditModal(false); location.reload() }}
