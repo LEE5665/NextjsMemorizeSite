@@ -11,14 +11,26 @@ export default async function MyQuizPage({ searchParams }) {
   const sort = param?.sort || 'updatedAt'
   const folderSort = param?.folderSort || 'updatedAt'
   const folderId = param?.folder
+  const search = param.search || ''
 
   const cookie = await headers()
   const header = cookie.get('cookie')
-  const res = await axios.get(`${process.env.NEXTAUTH_URL}/api/quizsets?sort=${sort}&folder=${folderId ?? ''}&folderSort=${folderSort}`, {
-    headers: { Cookie: header },
-  })
+  const params = new URLSearchParams()
+  params.set('sort', sort)
+  params.set('folderSort', folderSort)
+  if (search) {
+    params.set('search', search)
+  } else if (folderId) {
+    params.set('folder', folderId)
+  }
+  const res = await axios.get(
+    `${process.env.NEXTAUTH_URL}/api/quizsets?${params.toString()}`,
+    { headers: { Cookie: header } }
+  )
   const quizSets = res.data.quizSets
   const folders = res.data.folders
+  const groupedQuizSets = res.data.groupedQuizSets
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -29,6 +41,7 @@ export default async function MyQuizPage({ searchParams }) {
             <MyQuizTab
             quizSets={quizSets}
             folders={folders}
+            groupedQuizSets={groupedQuizSets}
             initialSort={sort}
             initialFolderSort={folderSort}
             initialFolderId={folderId}

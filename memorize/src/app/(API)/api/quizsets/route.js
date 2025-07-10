@@ -21,47 +21,78 @@ export async function GET(req) {
   const folderSort = allowedFolderSorts.includes(folderSortParam) ? folderSortParam : 'createdAt'
   const folderDir = folderSort === 'name' ? 'asc' : 'desc'
 
-  try {
-    let whereClause = { creatorId: session.user.id }
-    // 폴더 필터: 검색 없으면 적용, 검색 있으면 전체 검색
-    if (!search) {
-      if (folderParam) whereClause.folderId = parseInt(folderParam)
-      else whereClause.folderId = null
-    }
-    // 검색: 제목만, 폴더 상관없이 전체 내 퀴즈 검색
-    if (search) {
-      whereClause = {
-        creatorId: session.user.id,
-        title: { contains: search },
-      }
-    }
-
-    const [quizSets, folders] = await Promise.all([
-      prisma.quizSet.findMany({
-        where: whereClause,
-        include: {
-          questions: true,
-          folder: true,
-        },
-        orderBy: { [sort]: direction },
-      }),
-      prisma.folder.findMany({
-        where: { creatorId: session.user.id },
-        orderBy: { [folderSort]: folderDir },
-        include: {
-          _count: {
-            select: { quizSets: true },
-          },
-        },
-      }),
-    ])
-
-    return NextResponse.json({ quizSets, folders })
-  } catch (error) {
-    console.error('퀴즈 불러오기 오류:', error)
-    return NextResponse.json({ error: '서버 오류 발생' }, { status: 500 })
+  // 기본 where
+  let whereClause = { creatorId: session.user.id }
+  // 폴더 필터: 검색 없으면 적용
+  if (!search) {
+    if (folderParam) whereClause.folderId = parseInt(folderParam)
+    else whereClause.folderId = null
   }
+  // 검색: 제목만, 폴더 상관없이 전체 내 퀴즈 검색
+  if (search) {
+    whereClause = {
+      creatorId: session.user.id,
+      title: { contains: search },
+    }
+  }
+
+  // 퀴즈/폴더 전체 조회
+  const [quizSets, folders] = await Promise.all([
+    prisma.quizSet.findMany({
+      where: whereClause,
+      include: {
+        questions: true,
+        folder: true,
+      },
+      orderBy: { [sort]: direction },
+    }),
+    prisma.folder.findMany({
+      where: { creatorId: session.user.id },
+      orderBy: { [folderSort]: folderDir },
+      include: {
+        _count: {
+          select: { quizSets: true },
+        },
+      },
+    }),
+  ])
+
+  // 🔴 검색 중이면 폴더별로 묶기
+  let groupedQuizSets = []
+  if (search) {
+    // 1. 폴더별로 묶을 Map
+    const folderMap = {}
+    folders.forEach(folder => {
+      folderMap[folder.id] = { ...folder, quizSets: [] }
+    })
+    const noFolderQuizSets = []
+    quizSets.forEach(quiz => {
+      if (quiz.folderId && folderMap[quiz.folderId]) {
+        folderMap[quiz.folderId].quizSets.push(quiz)
+      } else {
+        noFolderQuizSets.push(quiz)
+      }
+    })
+    // 폴더 있는 것만
+    groupedQuizSets = [
+      ...Object.values(folderMap).filter(f => f.quizSets.length > 0),
+    ]
+    if (noFolderQuizSets.length > 0) {
+      groupedQuizSets.unshift({
+        id: null,
+        name: '폴더 없음',
+        quizSets: noFolderQuizSets,
+      })
+    }
+  }
+
+  return NextResponse.json({
+    groupedQuizSets,
+    quizSets: search ? [] : quizSets,
+    folders
+  })
 }
+
 
 export async function POST(req) {
   const session = await getServerSession(authOptions)
