@@ -1,44 +1,104 @@
 'use client'
-
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
+import { useState, useEffect } from 'react'
 
-export default function ExploreTab() {
+export default function ExploreTab({ initialQuizSets, total, page, search, searchType }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const page = parseInt(searchParams.get('page') || '1')
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['explore', page],
-    queryFn: async () => {
-      const res = await axios.get(`/api/explore?page=${page}`)
-      return res.data
-    },
-    keepPreviousData: true,
-  })
+  // SSR에서 props로 받은 값으로 state 초기화
+  const [quizSets, setQuizSets] = useState(initialQuizSets)
+  const [totalCount, setTotalCount] = useState(total)
+  const [input, setInput] = useState(search || '')
+  const [filterType, setFilterType] = useState(searchType || 'all')
+  const [currentPage, setCurrentPage] = useState(page || 1)
 
+  // searchParams 바뀔 때마다 값 다시 set
+  useEffect(() => {
+    setQuizSets(initialQuizSets)
+    setTotalCount(total)
+    setCurrentPage(page)
+  }, [initialQuizSets, total, page])
+
+  const totalPages = Math.ceil(totalCount / 12)
+  const typeText = (type) => (type === 'WORD' ? '단어장' : '일반문제')
+
+  // 검색
+  const handleSearch = (e) => {
+    e.preventDefault()
+    const params = new URLSearchParams(searchParams.toString())
+    if (input.trim()) {
+      params.set('search', input.trim())
+      params.set('searchType', filterType)
+      params.set('page', 1)
+    } else {
+      params.delete('search')
+      params.set('searchType', filterType)
+      params.set('page', 1)
+    }
+    router.push(`?${params}`)
+  }
+
+  // 검색타입 변경
+  const handleTypeChange = (e) => {
+    setFilterType(e.target.value)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('searchType', e.target.value)
+    params.set('page', 1)
+    router.push(`?${params}`)
+  }
+
+  // 페이지 이동
   const handlePageChange = (newPage) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', newPage)
-    router.push(`?${params.toString()}`)
+    router.push(`?${params}`)
   }
-
-  if (isLoading || !data) {
-    return <p style={{ color: 'var(--text-color)' }}>로딩 중...</p>
-  }
-
-  const { quizSets, total } = data
-  const totalPages = Math.ceil(total / 8)
-
-  // 퀴즈 타입 한글 변환
-  const typeText = (type) => (type === 'WORD' ? '단어장' : '일반문제')
 
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-8">
       <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-color)]">
         공개 퀴즈
       </h1>
+
+      {/* 검색창 */}
+      <form
+        onSubmit={handleSearch}
+        className="flex items-center gap-2 max-w-md mb-2"
+        autoComplete="off"
+      >
+        <select
+          value={filterType}
+          onChange={handleTypeChange}
+          className="rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-2 py-2 text-sm text-[var(--text-color)] font-semibold"
+        >
+          <option value="all">전체</option>
+          <option value="title">제목</option>
+          <option value="creator">제작자</option>
+        </select>
+        <input
+          type="text"
+          value={input}
+          placeholder={
+            filterType === 'creator'
+              ? '제작자명 검색'
+              : filterType === 'title'
+              ? '제목 검색'
+              : '제목/제작자 검색'
+          }
+          onChange={e => setInput(e.target.value)}
+          className="flex-1 rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-3 py-2 text-sm outline-none"
+          style={{ color: 'var(--text-color)' }}
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-md bg-[var(--button-bg)] text-[var(--button-text)] font-semibold"
+        >
+          검색
+        </button>
+      </form>
+      {/* 밑줄 */}
+      <div className="border-b border-[var(--border-color)] mb-4" />
 
       {quizSets.length === 0 ? (
         <p className="text-[var(--text-color)]">공개된 퀴즈가 없습니다.</p>
@@ -67,7 +127,7 @@ export default function ExploreTab() {
 
           <div className="flex justify-center gap-2 mt-6">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-              const isActive = page === p
+              const isActive = currentPage === p
               return (
                 <button
                   key={p}

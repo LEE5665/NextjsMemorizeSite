@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { Moon, Sun, Menu, X, User, FolderOpen, BookOpen } from 'lucide-react'
+import { Menu, X, User, FolderOpen, BookOpen } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
 export default function Sidebar() {
@@ -53,7 +53,7 @@ export default function Sidebar() {
       {/* 모바일 사이드바 */}
       {open && (
         <>
-          <div onClick={() => setOpen(false)} className="fixed inset-0 bg-black/50 z-40" />
+          <div onClick={() => setOpen(false)} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-all" />
           <aside className="fixed top-0 left-0 h-full w-64 bg-[--bg-color] text-[--text-color] z-50 flex flex-col px-6 py-8 shadow-2xl border-r border-[--border-color] animate-slide-in">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">퀴즈 메뉴</h2>

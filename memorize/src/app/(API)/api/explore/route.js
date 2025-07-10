@@ -6,16 +6,41 @@ export async function GET(req) {
   const page = parseInt(searchParams.get('page') || '1')
   const limit = 12
   const skip = (page - 1) * limit
+  const search = searchParams.get('search')?.trim() || ''
+  const searchType = searchParams.get('searchType') || 'all' // 추가
+
+  let filter = { isPublic: true }
+
+  if (search) {
+    if (searchType === 'title') {
+      filter = {
+        ...filter,
+        title: { contains: search }
+      }
+    } else if (searchType === 'creator') {
+      filter = {
+        ...filter,
+        creator: { name: { contains: search } }
+      }
+    } else {
+      filter = {
+        ...filter,
+        OR: [
+          { title: { contains: search } },
+          { creator: { name: { contains: search } } }
+        ]
+      }
+    }
+  }
 
   try {
     const [total, quizSets] = await Promise.all([
-      prisma.quizSet.count({ where: { isPublic: true } }),
+      prisma.quizSet.count({ where: filter }),
       prisma.quizSet.findMany({
-        where: { isPublic: true },
+        where: filter,
         include: {
           creator: { select: { name: true } },
           questions: true,
-
         },
         orderBy: { createdAt: 'desc' },
         skip,

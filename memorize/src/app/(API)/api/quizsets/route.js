@@ -11,6 +11,7 @@ export async function GET(req) {
   const sortParam = url.searchParams.get('sort') ?? 'createdAt'
   const folderParam = url.searchParams.get('folder')
   const folderSortParam = url.searchParams.get('folderSort') ?? 'createdAt'
+  const search = url.searchParams.get('search')?.trim() || ''
 
   const allowedSorts = ['createdAt', 'updatedAt', 'title']
   const sort = allowedSorts.includes(sortParam) ? sortParam : 'createdAt'
@@ -21,9 +22,19 @@ export async function GET(req) {
   const folderDir = folderSort === 'name' ? 'asc' : 'desc'
 
   try {
-    const whereClause = { creatorId: session.user.id }
-    if (folderParam) whereClause.folderId = parseInt(folderParam)
-    else whereClause.folderId = null
+    let whereClause = { creatorId: session.user.id }
+    // 폴더 필터: 검색 없으면 적용, 검색 있으면 전체 검색
+    if (!search) {
+      if (folderParam) whereClause.folderId = parseInt(folderParam)
+      else whereClause.folderId = null
+    }
+    // 검색: 제목만, 폴더 상관없이 전체 내 퀴즈 검색
+    if (search) {
+      whereClause = {
+        creatorId: session.user.id,
+        title: { contains: search },
+      }
+    }
 
     const [quizSets, folders] = await Promise.all([
       prisma.quizSet.findMany({

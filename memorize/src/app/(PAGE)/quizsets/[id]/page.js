@@ -1,4 +1,5 @@
 import Header from '../../../components/Header'
+import Sidebar from '../../../components/Sidebar'
 import View from './components/View'
 import axios from 'axios'
 import { headers } from 'next/headers'
@@ -17,9 +18,12 @@ export default async function QuizViewServerPage({ params }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 overflow-y-auto">
-        <View quizSet={quizSet} />
-      </main>
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <View quizSet={quizSet} />
+        </main>
+      </div>
     </div>
   )
 }
