@@ -1,10 +1,11 @@
 'use client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
 export default function ExploreTab({ initialQuizSets, total, page, search, searchType }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
+  const router = useRouter()
 
   // SSR에서 props로 받은 값으로 state 초기화
   const [quizSets, setQuizSets] = useState(initialQuizSets)
@@ -36,7 +37,7 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
       params.set('searchType', filterType)
       params.set('page', 1)
     }
-    router.push(`?${params}`)
+    router.push(`?${params.toString()}`)
   }
 
   // 검색타입 변경
@@ -45,14 +46,14 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
     const params = new URLSearchParams(searchParams.toString())
     params.set('searchType', e.target.value)
     params.set('page', 1)
-    router.push(`?${params}`)
+    router.push(`?${params.toString()}`)
   }
 
-  // 페이지 이동
-  const handlePageChange = (newPage) => {
+  // 현재 쿼리스트링 유지하며 page만 바꾸는 Link href 생성
+  const getPageLink = (p) => {
     const params = new URLSearchParams(searchParams.toString())
-    params.set('page', newPage)
-    router.push(`?${params}`)
+    params.set('page', p)
+    return `?${params.toString()}`
   }
 
   return (
@@ -106,10 +107,10 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {quizSets.map((quiz) => (
-              <div
+              <Link
                 key={quiz.id}
-                className="p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow-md hover:shadow-xl cursor-pointer transition relative"
-                onClick={() => router.push(`/quizsets/${quiz.id}`)}
+                href={`/quizsets/${quiz.id}`}
+                className="block p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow-md hover:shadow-xl cursor-pointer transition relative"
               >
                 <div className="absolute top-1 right-2 flex gap-1">
                   <span className="px-1.5 py-0.5 rounded-full text-[0.6rem] font-bold bg-[var(--badge-bg)] text-[var(--badge-text)]">
@@ -121,7 +122,7 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
                 </div>
                 <h2 className="font-bold text-lg truncate">{quiz.title}</h2>
                 <p className="text-xs mt-1 text-[var(--subtext-color)]">제작자: {quiz.creatorName}</p>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -129,17 +130,20 @@ export default function ExploreTab({ initialQuizSets, total, page, search, searc
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
               const isActive = currentPage === p
               return (
-                <button
+                <Link
                   key={p}
-                  onClick={() => handlePageChange(p)}
-                  className={`px-3 py-1 rounded border text-sm font-semibold transition ${isActive
-                      ? 'bg-[var(--button-bg)] text-white'
+                  href={getPageLink(p)}
+                  scroll={false}
+                  className={`px-3 py-1 rounded border text-sm font-semibold transition ${
+                    isActive
+                      ? 'bg-[var(--button-bg)] text-white pointer-events-none'
                       : 'bg-[var(--input-bg)] text-[var(--text-color)] hover:bg-[var(--button-bg)] hover:text-white'
-                    }`}
+                  }`}
                   style={{ borderColor: 'var(--border-color)' }}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   {p}
-                </button>
+                </Link>
               )
             })}
           </div>

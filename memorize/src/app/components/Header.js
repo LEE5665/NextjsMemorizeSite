@@ -10,7 +10,7 @@ export default async function Header() {
     <header className="w-full flex justify-between items-center px-6 py-4 shadow-sm border-b bg-[--header-bg] border-[--header-border] text-[--header-text]">
       {/* 왼쪽: 로고 */}
       <Link
-        href="/"
+        href="/explore"
         className="text-xl font-bold hover:opacity-80 text-[--header-link] hover:text-[--header-link-hover] transition"
       >
         QuizSite

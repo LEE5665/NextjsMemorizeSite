@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import CreateQuizSetModal from './CreateQuiz'
 import UploadQuizModal from './UploadQuiz'
@@ -118,6 +119,9 @@ export default function MyQuizTab({
 
   const typeText = (type) => (type === 'WORD' ? '단어장' : '일반문제')
 
+  // 폴더/퀴즈 목록에서 이동(이동만 하는 경우) 모두 Link로!
+  // 검색/정렬/페이지네이션 등은 router.push로 두는 게 SPA에 더 적합 (화면만 갱신)
+
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-8">
       {/* 타이틀 + 상단 버튼 */}
@@ -176,16 +180,16 @@ export default function MyQuizTab({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {folder.quizSets.map(quiz => (
-                  <div
+                  <Link
                     key={quiz.id}
-                    className="p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow hover:shadow-xl cursor-pointer transition"
-                    onClick={() => router.push(`/quizsets/${quiz.id}`)}
+                    href={`/quizsets/${quiz.id}`}
+                    className="block p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow hover:shadow-xl cursor-pointer transition"
                   >
                     <h2 className="font-bold text-lg truncate">{quiz.title}</h2>
                     <div className="flex gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--badge-bg)] text-[var(--badge-text)]">{quiz.questions.length}문제</span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -221,29 +225,24 @@ export default function MyQuizTab({
               </div>
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-3">
                 {sortedFolders.map((folder) => (
-                  <div
+                  <Link
                     key={folder.id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] group hover:shadow-lg transition relative w-full sm:w-auto"
+                    href={`?folder=${folder.id}`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] group hover:shadow-lg transition relative w-full sm:w-auto ${
+                      folderId === String(folder.id) ? 'underline' : ''
+                    }`}
                   >
-                    <button
-                      onClick={() => router.push(`?folder=${folder.id}`)}
-                      className={`
-                        flex items-center gap-2 w-full text-left truncate font-semibold text-[var(--text-color)]
-                        ${folderId === String(folder.id) ? 'underline' : ''}
-                      `}
-                    >
-                      {folderId === String(folder.id) ? <FolderOpen size={16} /> : <Folder size={16} />}
-                      <span className="truncate">{folder.name}</span>
-                    </button>
+                    {folderId === String(folder.id) ? <FolderOpen size={16} /> : <Folder size={16} />}
+                    <span className="truncate">{folder.name}</span>
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--badge-bg)] text-[var(--badge-text)]">
                       {folder._count?.quizSets ?? 0}
                     </span>
                     <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition">
-                      <button onClick={() => handleShare(folder.id)} title="공유"><Share2 size={16} /></button>
-                      <button onClick={() => handleEditFolder(folder.id)} title="수정"><Pencil size={16} /></button>
-                      <button onClick={() => handleDeleteFolder(folder.id)} title="삭제"><Trash2 size={16} /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); handleShare(folder.id); }} title="공유"><Share2 size={16} /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); handleEditFolder(folder.id); }} title="수정"><Pencil size={16} /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); handleDeleteFolder(folder.id); }} title="삭제"><Trash2 size={16} /></button>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </>
@@ -263,10 +262,10 @@ export default function MyQuizTab({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                 {quizSets.map((quiz) => (
-                  <div
+                  <Link
                     key={quiz.id}
-                    className="p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow-md hover:shadow-xl cursor-pointer transition relative"
-                    onClick={() => router.push(`/quizsets/${quiz.id}`)}
+                    href={`/quizsets/${quiz.id}`}
+                    className="block p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] shadow-md hover:shadow-xl cursor-pointer transition relative"
                   >
                     <div className="absolute top-1 right-2 flex gap-1">
                       <span className={`px-1.5 py-0.5 rounded-full text-[0.6rem] font-bold ${quiz.isPublic ? 'bg-[var(--badge-bg-public)] text-[var(--badge-text-public)]' : 'bg-[var(--badge-bg-private)] text-[var(--badge-text-private)]'}`}>{quiz.isPublic ? '공개' : '비공개'}</span>
@@ -274,7 +273,7 @@ export default function MyQuizTab({
                     </div>
                     <h2 className="font-bold text-lg truncate">{quiz.title}</h2>
                     <p className="text-xs mt-1" style={{ color: 'var(--subtext-color)' }}>{quiz.questions.length} 문제</p>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </>
