@@ -8,9 +8,9 @@ export async function GET(req) {
   if (!session) return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
 
   const url = new URL(req.url)
-  const sortParam = url.searchParams.get('sort') ?? 'createdAt'
+  const sortParam = url.searchParams.get('sort') ?? 'updatedAt'
   const folderParam = url.searchParams.get('folder')
-  const folderSortParam = url.searchParams.get('folderSort') ?? 'createdAt'
+  const folderSortParam = url.searchParams.get('folderSort') ?? 'updatedAt'
   const search = url.searchParams.get('search')?.trim() || ''
 
   const allowedSorts = ['createdAt', 'updatedAt', 'title']
@@ -57,6 +57,8 @@ export async function GET(req) {
     }),
   ])
 
+  console.log('quizSets', quizSets.map(q => ({ id: q.id, title: q.title, updatedAt: q.updatedAt })))
+
   // 🔴 검색 중이면 폴더별로 묶기
   let groupedQuizSets = []
   if (search) {
@@ -85,6 +87,8 @@ export async function GET(req) {
       })
     }
   }
+
+  //console.log(quizSets)
 
   return NextResponse.json({
     groupedQuizSets,

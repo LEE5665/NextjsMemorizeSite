@@ -22,10 +22,21 @@ export async function POST(req) {
     })
 
     if (quizSetIds.length > 0) {
-      await prisma.quizSet.updateMany({
+      const quizSets = await prisma.quizSet.findMany({
         where: { id: { in: quizSetIds }, creatorId: session.user.id },
-        data: { folderId: folder.id },
+        select: { id: true, updatedAt: true },
       })
+      await Promise.all(
+        quizSets.map(qs =>
+          prisma.quizSet.update({
+            where: { id: qs.id },
+            data: {
+              folderId: folder.id,
+              updatedAt: qs.updatedAt, // 기존값 그대로 덮어씀(변화없음)
+            }
+          })
+        )
+      )
     }
 
     return NextResponse.json({ folder })
@@ -34,4 +45,3 @@ export async function POST(req) {
     return NextResponse.json({ error: '서버 오류 발생' }, { status: 500 })
   }
 }
-

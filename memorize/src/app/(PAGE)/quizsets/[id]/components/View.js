@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import QuizSetModal from '@/app/(PAGE)/myquiz/components/CreateQuiz'
 
-// 모드 정의
 const MODES = [
   { key: 'CHOICE', top: '4지선다', bottom: '뜻 맞추기', direction: 'word2mean', path: 'mcquiz', type: 'WORD' },
   { key: 'REVERSE_CHOICE', top: '4지선다', bottom: '단어 맞추기', direction: 'mean2word', path: 'mcquiz', type: 'WORD' },
@@ -22,6 +21,16 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
   const router = useRouter()
   const total = quizSet.questions.length
   const isOwner = currentUserId === quizSet.creatorId
+
+  // 소리 듣기 함수
+  const speak = (text) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new window.SpeechSynthesisUtterance(text);
+    const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
+    utter.lang = isKorean ? 'ko-KR' : 'en-US';
+    window.speechSynthesis.speak(utter);
+  };
 
   // 삭제
   const handleDelete = async () => {
@@ -67,7 +76,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
         await axios.put(`/api/quizsets/${quizSet.id}/progress?type=${mode.key}`, {
           currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder
         })
-        // 새로고침하지 말고 진행도만 갱신
         setProgressMap(prev => ({
           ...prev,
           [mode.key]: { currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder }
@@ -185,7 +193,18 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
             >
               {quizSet.type === 'WORD' ? (
                 <>
-                  <div className="font-bold text-sm mb-1 text-blue-600 dark:text-blue-300">단어</div>
+                  <div className="font-bold text-sm mb-1 text-blue-600 dark:text-blue-300 flex items-center justify-between">
+                    <span>단어</span>
+                    <button
+                      onClick={() => speak(q.content)}
+                      className="ml-2 text-blue-400 hover:text-blue-700"
+                      title="소리 듣기"
+                      type="button"
+                      tabIndex={-1}
+                    >
+                      <span className="text-lg">🔊</span>
+                    </button>
+                  </div>
                   <div className="text-base font-extrabold mb-2 text-[var(--text-color)] break-all">{q.content}</div>
                   <div className="text-[var(--subtext-color)] text-sm">뜻: <span className="font-semibold">{q.answer}</span></div>
                 </>

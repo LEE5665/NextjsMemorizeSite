@@ -57,23 +57,42 @@ export async function PATCH(req, { params }) {
       where: { id: folderId, creatorId: session.user.id },
       data: { name: name.trim() },
     })
-
     if (updated.count === 0) {
       return NextResponse.json({ error: '수정 권한이 없습니다.' }, { status: 403 })
     }
 
-    // 기존 폴더 연결 제거
-    await prisma.quizSet.updateMany({
+    const existingQuizSets = await prisma.quizSet.findMany({
       where: { folderId, creatorId: session.user.id },
-      data: { folderId: null },
+      select: { id: true, updatedAt: true },
     })
+    await Promise.all(
+      existingQuizSets.map(qs =>
+        prisma.quizSet.update({
+          where: { id: qs.id },
+          data: {
+            folderId: null,
+            updatedAt: qs.updatedAt,
+          }
+        })
+      )
+    )
 
-    // 새로 선택된 퀴즈 연결
     if (quizSetIds.length > 0) {
-      await prisma.quizSet.updateMany({
+      const toAddQuizSets = await prisma.quizSet.findMany({
         where: { id: { in: quizSetIds }, creatorId: session.user.id },
-        data: { folderId },
+        select: { id: true, updatedAt: true },
       })
+      await Promise.all(
+        toAddQuizSets.map(qs =>
+          prisma.quizSet.update({
+            where: { id: qs.id },
+            data: {
+              folderId,
+              updatedAt: qs.updatedAt,
+            }
+          })
+        )
+      )
     }
 
     return NextResponse.json({ message: '폴더 수정 완료' })

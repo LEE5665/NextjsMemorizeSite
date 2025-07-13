@@ -45,17 +45,6 @@ export default function MyQuizTab({
     setGroupedQuizSets(initialGroupedQuizSets || [])
   }, [initialQuizSets, initialFolders, initialGroupedQuizSets])
 
-  // 폴더 정렬
-  const sortedFolders = [...folders].sort((a, b) => {
-    if (folderSort === 'createdAt') {
-      return new Date(b.createdAt) - new Date(a.createdAt)
-    }
-    if (folderSort === 'name') {
-      return a.name.localeCompare(b.name, 'ko')
-    }
-    return new Date(b.updatedAt) - new Date(a.updatedAt)
-  })
-
   // 검색 핸들러
   const handleSearch = (e) => {
     e.preventDefault()
@@ -66,7 +55,7 @@ export default function MyQuizTab({
     } else {
       params.delete('search')
     }
-    router.push(`?${params}`)
+    router.push(`?${params.toString()}`)
   }
 
   // 폴더 삭제
@@ -118,9 +107,6 @@ export default function MyQuizTab({
   }
 
   const typeText = (type) => (type === 'WORD' ? '단어장' : '일반문제')
-
-  // 폴더/퀴즈 목록에서 이동(이동만 하는 경우) 모두 Link로!
-  // 검색/정렬/페이지네이션 등은 router.push로 두는 게 SPA에 더 적합 (화면만 갱신)
 
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-8">
@@ -204,7 +190,11 @@ export default function MyQuizTab({
                 <select
                   className="border px-3 py-1 rounded bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] w-full sm:w-auto"
                   value={folderSort}
-                  onChange={(e) => router.push(`?folderSort=${e.target.value}`)}
+                  onChange={e => {
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.set('folderSort', e.target.value)
+                    router.push(`?${params.toString()}`)
+                  }}
                 >
                   <option value="updatedAt">최신순</option>
                   <option value="createdAt">생성순</option>
@@ -224,13 +214,12 @@ export default function MyQuizTab({
                 )}
               </div>
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-3">
-                {sortedFolders.map((folder) => (
+                {folders.map((folder) => (
                   <Link
                     key={folder.id}
                     href={`?folder=${folder.id}`}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] group hover:shadow-lg transition relative w-full sm:w-auto ${
-                      folderId === String(folder.id) ? 'underline' : ''
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] group hover:shadow-lg transition relative w-full sm:w-auto ${folderId === String(folder.id) ? 'underline' : ''
+                      }`}
                   >
                     {folderId === String(folder.id) ? <FolderOpen size={16} /> : <Folder size={16} />}
                     <span className="truncate">{folder.name}</span>
@@ -253,7 +242,11 @@ export default function MyQuizTab({
                 <select
                   className="border px-3 py-1 rounded bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] w-full sm:w-auto"
                   value={sort}
-                  onChange={(e) => router.push(`?sort=${e.target.value}`)}
+                  onChange={e => {
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.set('sort', e.target.value)
+                    router.push(`?${params.toString()}`)
+                  }}
                 >
                   <option value="updatedAt">최신순</option>
                   <option value="createdAt">생성순</option>
