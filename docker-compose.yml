@@ -21,12 +21,26 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
     depends_on:
       - mariadb
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: >
+      sh -c "certbot certonly --webroot -w /var/www/certbot
+      --email your@email.com --agree-tos --no-eff-email
+      -d yourdomain.com -d www.yourdomain.com"
 
 volumes:
   mariadb_data:
