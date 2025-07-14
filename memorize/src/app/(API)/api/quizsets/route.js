@@ -57,7 +57,7 @@ export async function GET(req) {
     }),
   ])
 
-  console.log('quizSets', quizSets.map(q => ({ id: q.id, title: q.title, updatedAt: q.updatedAt })))
+  //console.log('quizSets', quizSets.map(q => ({ id: q.id, title: q.title, updatedAt: q.updatedAt })))
 
   // 🔴 검색 중이면 폴더별로 묶기
   let groupedQuizSets = []
