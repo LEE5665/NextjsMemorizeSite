@@ -198,7 +198,7 @@ export default function MyQuizTab({
                 >
                   <option value="updatedAt">최신순</option>
                   <option value="createdAt">생성순</option>
-                  <option value="name">이름순</option>
+                  <option value="name">제목순</option>
                 </select>
                 {folderId && (
                   <button
