@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
+import { Volume2 } from 'lucide-react'
 
 export default function MCQuizPage() {
   const { id } = useParams()
@@ -10,8 +11,7 @@ export default function MCQuizPage() {
   const direction = searchParams.get('direction') || 'word2mean'
   const router = useRouter()
 
-  // 문제집/타입 정보
-  const [quizType, setQuizType] = useState(null) // 'WORD' | 'QA'
+  const [quizType, setQuizType] = useState(null)
   const [questions, setQuestions] = useState([])
   const [shuffledOrder, setShuffledOrder] = useState([])
   const [current, setCurrent] = useState(0)
@@ -21,7 +21,6 @@ export default function MCQuizPage() {
   const [incorrects, setIncorrects] = useState([])
   const [options, setOptions] = useState([])
 
-  // 1. 문제집 정보 먼저 받아오기 (quizType 필수)
   useEffect(() => {
     const fetchQuiz = async () => {
       const res = await axios.get(`/api/quizsets/${id}`)
@@ -31,11 +30,9 @@ export default function MCQuizPage() {
     fetchQuiz()
   }, [id])
 
-  // 2. 문제+진행도 불러오기 (quizType 먼저 받아와야 함)
   useEffect(() => {
     if (!quizType || questions.length === 0) return
 
-    // progressType 결정
     const progressType =
       quizType === 'QA'
         ? 'QA_CHOICE'
@@ -45,7 +42,6 @@ export default function MCQuizPage() {
     let cur = 0
     let incs = []
 
-    // 진행도 fetch
     const fetchProgress = async () => {
       try {
         const progRes = await axios.get(`/api/quizsets/${id}/progress?type=${progressType}`)
@@ -73,12 +69,10 @@ export default function MCQuizPage() {
     // eslint-disable-next-line
   }, [quizType, questions, id, direction])
 
-  // 현재 문제
   const q = (questions && shuffledOrder && typeof shuffledOrder[current] !== "undefined")
     ? questions[shuffledOrder[current]]
     : undefined
 
-  // 3. 선택지 생성
   useEffect(() => {
     if (!q) return
     let answer, allAnswers
@@ -97,20 +91,19 @@ export default function MCQuizPage() {
 
   const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
 
+  // showResult를 true로 바꾸는 역할은 선택지/잘 모르겠습니다 둘 다 동일!
   const handleSelect = (option) => {
     if (selected !== null) return
     setSelected(option)
     setShowResult(true)
   }
 
-  // progressType 항상 quizType에 맞춰서 사용
   const getProgressType = () => (
     quizType === 'QA'
       ? 'QA_CHOICE'
       : (direction === 'mean2word' ? 'REVERSE_CHOICE' : 'CHOICE')
   )
 
-  // 다음 문제
   const next = async () => {
     let answer
     if (quizType === 'QA') {
@@ -137,7 +130,6 @@ export default function MCQuizPage() {
     setIncorrects(newIncorrects)
   }
 
-  // 다시 시작
   const handleRestart = async () => {
     const newOrder = [...Array(questions.length).keys()].sort(() => Math.random() - 0.5)
     await axios.put(`/api/quizsets/${id}/progress?type=${getProgressType()}`, {
@@ -161,7 +153,6 @@ export default function MCQuizPage() {
     window.speechSynthesis.speak(utterance)
   }
 
-  // === 로딩 ===
   if (quizType === null || questions.length === 0 || !q && !finished) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-xl" style={{ color: 'var(--text-color)' }}>
@@ -170,24 +161,55 @@ export default function MCQuizPage() {
     )
   }
 
-  // === 퀴즈 완료 ===
   if (finished) {
+    const score = questions.length - incorrects.length
+    const total = questions.length
+    const percent = total === 0 ? 0 : Math.round((score / total) * 100)
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)] px-4">
-        <div className="max-w-xl w-full bg-[var(--input-bg)] p-8 rounded-2xl shadow-xl space-y-6 text-center border border-[var(--border-color)]">
-          <h2 className="text-2xl font-bold mb-3">퀴즈 완료!</h2>
-          <p className="text-lg mb-4">
-            점수: <span className="font-bold text-blue-500">{questions.length - incorrects.length} / {questions.length}</span>
-          </p>
+        <div className="max-w-md w-full bg-[var(--input-bg)] p-8 rounded-3xl shadow-2xl space-y-8 text-center border border-[var(--border-color)]">
+          {/* 점수 원형 Progress */}
+          <div className="flex justify-center">
+            <div className="relative flex items-center justify-center w-28 h-28">
+              {/* 배경 원 */}
+              <svg className="absolute top-0 left-0" width="112" height="112">
+                <circle
+                  cx="56" cy="56" r="48"
+                  stroke="var(--border-color)"
+                  strokeWidth="14"
+                  fill="none"
+                />
+                {/* progress 원 */}
+                <circle
+                  cx="56" cy="56" r="48"
+                  stroke="#3b82f6"
+                  strokeWidth="14"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 48}
+                  strokeDashoffset={2 * Math.PI * 48 * (1 - score / total)}
+                  strokeLinecap="round"
+                  transform="rotate(-90 56 56)"
+                  style={{ transition: 'stroke-dashoffset 0.7s' }}
+                />
+              </svg>
+              <span className="text-2xl font-extrabold text-blue-500 z-10 select-none">{score} / {total}</span>
+            </div>
+          </div>
+          {/* 퀴즈 완료 텍스트 */}
+          <h2 className="text-2xl font-bold mb-0 mt-2 tracking-tight">퀴즈 완료</h2>
+          <p className="text-lg font-semibold text-gray-500 dark:text-gray-300">정답률 <span className="font-bold text-blue-500">{percent}%</span></p>
+
+          {/* 틀린 문제 */}
           {incorrects.length > 0 && (
-            <div className="mt-6 text-left">
+            <div className="mt-3 text-left">
               <h3 className="font-bold mb-2 text-red-500">틀린 문제</h3>
               <div className="space-y-2">
                 {incorrects.map(i => (
                   <div key={i} className="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm shadow-sm">
-                    <div>
+                    <div className="mb-1">
                       <span className="font-bold">문제:</span>
-                      <span className="ml-2 font-semibold text-[var(--subtext-color)]">
+                      <span className="ml-2 text-[var(--subtext-color)]">
                         {quizType === 'QA'
                           ? questions[i]?.content
                           : (direction === 'mean2word' ? questions[i]?.answer : questions[i]?.content)
@@ -196,7 +218,7 @@ export default function MCQuizPage() {
                     </div>
                     <div>
                       <span className="font-bold">정답:</span>
-                      <span className="ml-2 font-bold" style={{ color: 'var(--danger-text)' }}>
+                      <span className="ml-2" style={{ color: 'var(--danger-text)' }}>
                         {quizType === 'QA'
                           ? questions[i]?.answer
                           : (direction === 'mean2word' ? questions[i]?.content : questions[i]?.answer)
@@ -208,9 +230,10 @@ export default function MCQuizPage() {
               </div>
             </div>
           )}
+          {/* 다시 하기 버튼 */}
           <button
             onClick={handleRestart}
-            className="mt-8 px-6 py-2 rounded-xl font-semibold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+            className="mt-8 px-7 py-3 rounded-2xl font-bold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-lg text-white shadow transition"
           >
             다시 하기
           </button>
@@ -219,7 +242,6 @@ export default function MCQuizPage() {
     )
   }
 
-  // === 퀴즈 풀이 화면 ===
   let prompt
   if (quizType === 'QA') {
     prompt = q.content
@@ -243,14 +265,15 @@ export default function MCQuizPage() {
         </div>
 
         {/* 문제 */}
-        <div className="flex flex-row items-center gap-2 text-lg sm:text-2xl font-bold mb-4">
+        <div className="flex flex-row items-center gap-2 text-lg sm:text-2xl font mb-4">
           <span>{prompt}</span>
           <button
             onClick={() => speak(prompt)}
             className="ml-2 text-blue-400 hover:text-blue-700"
             title="문제 읽기"
+            type="button"
           >
-            <span className="text-lg">🔊</span>
+            <Volume2 size={22} />
           </button>
         </div>
 
@@ -265,39 +288,47 @@ export default function MCQuizPage() {
             }
             const isSelected = selected === option
             const isCorrect = option === answer
+
+            let buttonClass = `
+    w-full px-4 py-3 rounded-xl border shadow transition
+    flex items-center gap-3
+  `
+
+            if (showResult) {
+              if (isCorrect) {
+                buttonClass += ' bg-[var(--selected-bg)] text-[var(--selected-text)] border-[var(--selected-bg)]'
+              } else if (selected && isSelected && !isCorrect) {
+                buttonClass += ' bg-[var(--danger-text)] text-white border-[var(--danger-hover)]'
+              } else {
+                buttonClass += ' bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] opacity-60'
+              }
+            } else {
+              buttonClass += ' bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] hover:bg-[var(--button-hover-bg)] hover:text-white'
+            }
+
             return (
               <button
                 key={idx}
-                disabled={selected !== null}
+                disabled={showResult}
                 onClick={() => handleSelect(option)}
-                className={`
-                  w-full px-4 py-3 rounded-xl font-semibold border shadow transition
-                  flex items-center gap-3
-                  ${selected
-                    ? isSelected
-                      ? isCorrect
-                        ? 'bg-[var(--selected-bg)] text-[var(--selected-text)] border-[var(--selected-bg)]'
-                        : 'bg-[var(--danger-text)] text-white border-[var(--danger-hover)]'
-                      : isCorrect
-                        ? 'bg-[var(--selected-bg)] text-[var(--selected-text)] border-[var(--selected-bg)] opacity-80'
-                        : 'bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] opacity-60'
-                    : 'bg-[var(--input-bg)] text-[var(--text-color)] border-[var(--border-color)] hover:bg-[var(--button-hover-bg)] hover:text-white'}
-                `}
+                className={buttonClass}
                 style={{ fontSize: '1.1rem' }}
               >
                 <span className="flex-1 text-left">{option}</span>
                 <span
                   onClick={e => { e.stopPropagation(); speak(option); }}
                   title="읽기"
-                  className="ml-2 cursor-pointer text-blue-400 hover:text-blue-600 text-base"
-                >🔊</span>
+                  className="ml-2 cursor-pointer text-blue-400 hover:text-blue-600 text-base flex items-center"
+                >
+                  <Volume2 size={18} />
+                </span>
               </button>
             )
           })}
         </div>
 
         {/* 다음 문제 버튼 */}
-        {selected !== null && (
+        {showResult && (
           <div className="text-center mt-4">
             <button
               onClick={next}
@@ -309,7 +340,7 @@ export default function MCQuizPage() {
         )}
 
         {/* 모르겠어요 */}
-        {!selected && (
+        {!showResult && (
           <button
             onClick={() => handleSelect('')}
             className="block mx-auto mt-2 text-sm text-gray-400 underline"

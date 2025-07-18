@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import QuizSetModal from '@/app/(PAGE)/myquiz/components/CreateQuiz'
+import { Volume2 } from 'lucide-react'
 
 const MODES = [
   { key: 'CHOICE', top: '4지선다', bottom: '뜻 맞추기', direction: 'word2mean', path: 'mcquiz', type: 'WORD' },
@@ -22,7 +23,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
   const total = quizSet.questions.length
   const isOwner = currentUserId === quizSet.creatorId
 
-  // 소리 듣기 함수
+  // 소리 듣기
   const speak = (text) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -63,38 +64,61 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
     const current = prog?.currentIndex ?? 0
     const finished = current >= total
 
-    let actionLabel = '시작'
-    let action
+    // 핸들러
+    const goQuiz = () =>
+      router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
 
+    const restartQuiz = async () => {
+      const newOrder = [...Array(total).keys()].sort(() => Math.random() - 0.5)
+      await axios.put(`/api/quizsets/${quizSet.id}/progress?type=${mode.key}`, {
+        currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder
+      })
+      setProgressMap(prev => ({
+        ...prev,
+        [mode.key]: { currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder }
+      }))
+      router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
+    }
+
+    let actionButtons = null
     if (prog && current > 0 && !finished) {
-      actionLabel = '이어하기'
-      action = () => router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
+      // 이어하기 + 새로 시작
+      actionButtons = (
+        <div className="flex gap-2">
+          <button
+            className="flex-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+            onClick={goQuiz}
+          >
+            이어하기
+          </button>
+          <button
+            className="flex-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+            onClick={restartQuiz}
+          >
+            새로 시작
+          </button>
+        </div>
+      )
     } else if (prog && finished) {
-      actionLabel = '새로 시작'
-      action = async () => {
-        const newOrder = [...Array(total).keys()].sort(() => Math.random() - 0.5)
-        await axios.put(`/api/quizsets/${quizSet.id}/progress?type=${mode.key}`, {
-          currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder
-        })
-        setProgressMap(prev => ({
-          ...prev,
-          [mode.key]: { currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder }
-        }))
-        router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
-      }
-    } else if (!prog || current === 0) {
-      actionLabel = '시작'
-      action = async () => {
-        const newOrder = [...Array(total).keys()].sort(() => Math.random() - 0.5)
-        await axios.put(`/api/quizsets/${quizSet.id}/progress?type=${mode.key}`, {
-          currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder
-        })
-        setProgressMap(prev => ({
-          ...prev,
-          [mode.key]: { currentIndex: 0, shuffledOrder: newOrder, incorrects: [], order: newOrder }
-        }))
-        router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
-      }
+      // 끝: 새로 시작
+      actionButtons = (
+        <button
+          className="w-full mt-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+          onClick={restartQuiz}
+        >
+          새로 시작
+        </button>
+      )
+    } else {
+      // 처음: 시작
+      actionButtons = (
+        <button
+          className="w-full mt-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+          onClick={restartQuiz}
+        >
+          시작
+        </button>
+      )
     }
 
     return (
@@ -118,16 +142,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
           </div>
           <span className="text-xs font-semibold min-w-max ml-2">{current} / {total}</span>
         </div>
-        <button
-          className={`
-            w-full mt-1 py-2 rounded-lg font-bold text-sm
-            bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white
-            transition
-          `}
-          onClick={action}
-        >
-          {actionLabel}
-        </button>
+        {actionButtons}
       </div>
     )
   }
@@ -193,26 +208,53 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
             >
               {quizSet.type === 'WORD' ? (
                 <>
-                  <div className="font-bold text-sm mb-1 text-blue-600 dark:text-blue-300 flex items-center justify-between">
-                    <span>단어</span>
+                  {/* 단어 라벨 */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-sm text-indigo-700 dark:text-indigo-300">단어</span>
                     <button
                       onClick={() => speak(q.content)}
-                      className="ml-2 text-blue-400 hover:text-blue-700"
+                      className="ml-1 text-indigo-400 hover:text-indigo-700"
                       title="소리 듣기"
                       type="button"
                       tabIndex={-1}
                     >
-                      <span className="text-lg">🔊</span>
+                      <Volume2 size={18} />
                     </button>
                   </div>
-                  <div className="text-base font-extrabold mb-2 text-[var(--text-color)] break-all">{q.content}</div>
-                  <div className="text-[var(--subtext-color)] text-sm">뜻: <span className="font-semibold">{q.answer}</span></div>
+                  {/* 단어 값 */}
+                  <div className="text-base mb-2 text-[var(--text-color)] break-all flex items-center gap-2">
+                    <span>{q.content}</span>
+                  </div>
+                  {/* 뜻 */}
+                  <div className="text-[var(--subtext-color)] text-sm flex items-center gap-1">
+                    뜻:
+                    <span>{q.answer}</span>
+                  </div>
                 </>
               ) : (
                 <>
-                  <div className="font-bold text-sm mb-1 text-indigo-700 dark:text-indigo-300">문제</div>
-                  <div className="text-base font-extrabold mb-2 text-[var(--text-color)] break-all">{q.content}</div>
-                  <div className="text-[var(--subtext-color)] text-sm">정답: <span className="font-semibold">{q.answer}</span></div>
+                  {/* 문제 라벨 */}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-sm text-indigo-700 dark:text-indigo-300">문제</span>
+                    <button
+                      onClick={() => speak(q.content)}
+                      className="ml-1 text-indigo-400 hover:text-indigo-700"
+                      title="소리 듣기"
+                      type="button"
+                      tabIndex={-1}
+                    >
+                      <Volume2 size={18} />
+                    </button>
+                  </div>
+                  {/* 문제 값 */}
+                  <div className="text-base mb-2 text-[var(--text-color)] break-all flex items-center gap-2">
+                    <span>{q.content}</span>
+                  </div>
+                  {/* 정답 */}
+                  <div className="text-[var(--subtext-color)] text-sm flex items-center gap-1">
+                    정답:
+                    <span>{q.answer}</span>
+                  </div>
                 </>
               )}
             </div>

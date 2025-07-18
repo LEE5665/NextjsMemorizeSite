@@ -141,13 +141,45 @@ export default function ShortQuizPage() {
   }
 
   if (finished) {
+    const score = questions.length - incorrects.length
+    const total = questions.length
+    const percent = total === 0 ? 0 : Math.round((score / total) * 100)
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg-color)] text-[var(--text-color)] px-4">
-        <div className="max-w-xl w-full bg-[var(--input-bg)] p-8 rounded-2xl shadow-xl space-y-6 text-center border border-[var(--border-color)]">
-          <h2 className="text-2xl font-bold mb-3">퀴즈 완료!</h2>
-          <p className="text-lg">
-            점수: <span className="font-bold text-blue-500">{questions.length - incorrects.length} / {questions.length}</span>
-          </p>
+        <div className="max-w-md w-full bg-[var(--input-bg)] p-8 rounded-3xl shadow-2xl space-y-8 text-center border border-[var(--border-color)]">
+          {/* 점수 원형 Progress */}
+          <div className="flex justify-center">
+            <div className="relative flex items-center justify-center w-28 h-28">
+              {/* 배경 원 */}
+              <svg className="absolute top-0 left-0" width="112" height="112">
+                <circle
+                  cx="56" cy="56" r="48"
+                  stroke="var(--border-color)"
+                  strokeWidth="14"
+                  fill="none"
+                />
+                {/* progress 원 */}
+                <circle
+                  cx="56" cy="56" r="48"
+                  stroke="#3b82f6"
+                  strokeWidth="14"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 48}
+                  strokeDashoffset={2 * Math.PI * 48 * (1 - score / total)}
+                  strokeLinecap="round"
+                  transform="rotate(-90 56 56)"
+                  style={{ transition: 'stroke-dashoffset 0.7s' }}
+                />
+              </svg>
+              <span className="text-2xl font-extrabold text-blue-500 z-10 select-none">{score} / {total}</span>
+            </div>
+          </div>
+          {/* 퀴즈 완료 텍스트 */}
+          <h2 className="text-2xl font-bold mb-0 mt-2 tracking-tight">퀴즈 완료!</h2>
+          <p className="text-lg font-semibold text-gray-500 dark:text-gray-300">정답률 <span className="font-bold text-blue-500">{percent}%</span></p>
+
+          {/* 틀린 문제 */}
           {incorrects.length > 0 && (
             <div className="mt-6 text-left">
               <h3 className="font-bold mb-2 text-red-500">틀린 문제</h3>
@@ -155,11 +187,11 @@ export default function ShortQuizPage() {
                 {incorrects.map(i => (
                   <div key={i} className="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm shadow-sm">
                     <div>
-                      <span className="font-semibold">{questions[i].content}</span>
+                      <span>{questions[i].content}</span>
                     </div>
                     <div>
                       <span className="font-bold">정답:</span>
-                      <span className="ml-2 font-bold" style={{ color: 'var(--danger-text)' }}>
+                      <span className="ml-2" style={{ color: 'var(--danger-text)' }}>
                         {direction === 'mean2word' ? questions[i]?.content : questions[i]?.answer}
                       </span>
                     </div>
@@ -170,7 +202,7 @@ export default function ShortQuizPage() {
           )}
           <button
             onClick={handleRestart}
-            className="mt-8 px-6 py-2 rounded-xl font-semibold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+            className="mt-8 px-7 py-3 rounded-2xl font-bold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-lg text-white shadow transition"
           >
             다시 하기
           </button>
