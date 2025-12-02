@@ -19,11 +19,12 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
   const [showEditModal, setShowEditModal] = useState(false)
   const [isCopying, setIsCopying] = useState(false)
   const [progressMap, setProgressMap] = useState(progresses ?? {})
+  const [isSimpleMode, setIsSimpleMode] = useState(false)
   const router = useRouter()
+
   const total = quizSet.questions.length
   const isOwner = currentUserId === quizSet.creatorId
 
-  // 소리 듣기
   const speak = (text) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -33,7 +34,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
     window.speechSynthesis.speak(utter);
   };
 
-  // 삭제
   const handleDelete = async () => {
     if (confirm('정말 삭제할까요?')) {
       await axios.delete(`/api/quizsets/${quizSet.id}`)
@@ -41,7 +41,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
     }
   }
 
-  // 내 퀴즈로 복사
   const handleCopy = async () => {
     if (isCopying) return
     setIsCopying(true)
@@ -55,7 +54,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
     }
   }
 
-  // 모드별 카드
   const renderModeCard = (mode) => {
     if (mode.type === 'WORD' && quizSet.type !== 'WORD') return null
     if (mode.type === 'QA' && quizSet.type !== 'QA') return null
@@ -64,7 +62,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
     const current = prog?.currentIndex ?? 0
     const finished = current >= total
 
-    // 핸들러
     const goQuiz = () =>
       router.push(`/quizsets/${quizSet.id}/${mode.path}?direction=${mode.direction}`)
 
@@ -82,7 +79,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
 
     let actionButtons = null
     if (prog && current > 0 && !finished) {
-      // 이어하기 + 새로 시작
       actionButtons = (
         <div className="flex gap-2">
           <button
@@ -100,7 +96,6 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
         </div>
       )
     } else if (prog && finished) {
-      // 끝: 새로 시작
       actionButtons = (
         <button
           className="w-full mt-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
@@ -110,11 +105,9 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
         </button>
       )
     } else {
-      // 처음: 시작
       actionButtons = (
         <button
           className="w-full mt-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
-          onClick={restartQuiz}
         >
           시작
         </button>
@@ -124,12 +117,9 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
     return (
       <div
         key={mode.key}
-        className={`
-          flex flex-col justify-between border border-[var(--border-color)]
-          bg-[var(--input-bg)] rounded-2xl shadow min-h-[140px] p-6
-          hover:shadow-lg transition-transform hover:scale-[1.018]
-        `}
-        style={{ minWidth: 0 }}
+        className="flex flex-col justify-between border border-[var(--border-color)]
+        bg-[var(--input-bg)] rounded-2xl shadow min-h-[140px] p-6
+        hover:shadow-lg transition-transform hover:scale-[1.018]"
       >
         <div className="mb-1 font-bold text-base sm:text-lg text-[var(--text-color)]">{mode.top}</div>
         <div className="text-xs text-gray-500 mb-4">{mode.bottom}</div>
@@ -158,9 +148,12 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
       )}
 
       <div className="rounded-2xl shadow-lg bg-[var(--bg-color)] border border-[var(--border-color)] px-2 sm:px-8 py-7 mb-10">
-        {/* 타이틀+공개여부 */}
+
+        {/* 타이틀 */}
         <div className="flex items-center gap-2 mb-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-color)] break-words flex-1">{quizSet.title}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-color)] break-words flex-1">
+            {quizSet.title}
+          </h1>
           <span className={`
             inline-flex items-center justify-center min-w-[52px] px-3 py-1 text-xs font-semibold rounded-full
             ${quizSet.isPublic
@@ -171,9 +164,11 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
             {quizSet.isPublic ? '공개' : '비공개'}
           </span>
         </div>
-        {/* 타입/문제수 */}
+
         <div className="flex gap-3 text-sm mb-8">
-          <span className="rounded bg-[var(--input-bg)] px-2 py-1 font-semibold">{quizSet.type === 'WORD' ? '단어장' : '일반문제'}</span>
+          <span className="rounded bg-[var(--input-bg)] px-2 py-1 font-semibold">
+            {quizSet.type === 'WORD' ? '단어장' : '일반문제'}
+          </span>
           <span className="rounded bg-[var(--input-bg)] px-2 py-1 font-semibold">{total} 문제</span>
         </div>
 
@@ -189,7 +184,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
           </div>
         )}
 
-        {/* 내 퀴즈일 때만 모드카드 */}
+        {/* 내 퀴즈 모드 카드 */}
         {isOwner && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
             {MODES.filter(mode =>
@@ -199,80 +194,149 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
           </div>
         )}
 
-        {/* 문제 카드 목록 */}
-        <div className="border-t border-[var(--border-color)] pt-7 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {quizSet.questions.map((q, idx) => (
-            <div
-              key={idx}
-              className="p-4 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] shadow-sm hover:scale-[1.01] transition"
-            >
-              {quizSet.type === 'WORD' ? (
-                <>
-                  {/* 단어 라벨 */}
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-sm text-indigo-700 dark:text-indigo-300">단어</span>
-                    <button
-                      onClick={() => speak(q.content)}
-                      className="ml-1 text-indigo-400 hover:text-indigo-700"
-                      title="소리 듣기"
-                      type="button"
-                      tabIndex={-1}
-                    >
-                      <Volume2 size={18} />
-                    </button>
-                  </div>
-                  {/* 단어 값 */}
-                  <div className="text-base mb-2 text-[var(--text-color)] break-all flex items-center gap-2">
-                    <span>{q.content}</span>
-                  </div>
-                  {/* 뜻 */}
-                  <div className="text-[var(--subtext-color)] text-sm flex items-center gap-1">
-                    뜻:
-                    <span>{q.answer}</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* 문제 라벨 */}
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-sm text-indigo-700 dark:text-indigo-300">문제</span>
-                    <button
-                      onClick={() => speak(q.content)}
-                      className="ml-1 text-indigo-400 hover:text-indigo-700"
-                      title="소리 듣기"
-                      type="button"
-                      tabIndex={-1}
-                    >
-                      <Volume2 size={18} />
-                    </button>
-                  </div>
-                  {/* 문제 값 */}
-                  <div className="text-base mb-2 text-[var(--text-color)] break-all flex items-center gap-2">
-                    <span>{q.content}</span>
-                  </div>
-                  {/* 정답 */}
-                  <div className="text-[var(--subtext-color)] text-sm flex items-center gap-1">
-                    정답:
-                    <span>{q.answer}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+        {/* 보기 모드 토글 */}
+        <div className="flex items-center gap-3 mb-5">
+          <span className="font-semibold text-sm text-[var(--text-color)]">보기 모드:</span>
+
+          <button
+            onClick={() => setIsSimpleMode(false)}
+            className={`px-3 py-1 rounded-lg text-sm font-bold ${!isSimpleMode
+                ? 'bg-[var(--button-bg)] text-white'
+                : 'bg-[var(--input-bg)] text-[var(--text-color)]'
+              }`}
+          >
+            기본
+          </button>
+
+          <button
+            onClick={() => setIsSimpleMode(true)}
+            className={`px-3 py-1 rounded-lg text-sm font-bold ${isSimpleMode
+                ? 'bg-[var(--button-bg)] text-white'
+                : 'bg-[var(--input-bg)] text-[var(--text-color)]'
+              }`}
+          >
+            단어만
+          </button>
         </div>
 
-        {/* 하단 액션 (내 퀴즈일 때만) */}
+        {/* ======================================================
+            문제 카드 렌더링
+        ====================================================== */}
+        <div className="border-t border-[var(--border-color)] pt-7 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {quizSet.questions.map((q, idx) => {
+            const isShown = progressMap[`show_${idx}`] ?? false
+
+            // 단어만 보기 모드
+            if (isSimpleMode) {
+              return (
+                <div
+                  className="p-4 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)]
+    shadow-sm hover:scale-[1.01] cursor-pointer transition"
+                  onClick={() =>
+                    setProgressMap(prev => ({
+                      ...prev,
+                      [`show_${idx}`]: !isShown
+                    }))
+                  }
+                >
+                  <div className="flex flex-wrap items-start w-full gap-2">
+
+                    {/* 단어 */}
+                    <span className="font-bold text-base text-[var(--text-color)] shrink-0">
+                      {q.content}
+                    </span>
+
+                    {/* 뜻 (짧으면 옆줄, 길면 자동으로 아래로) */}
+                    {isShown && (
+                      <span className="text-sm text-[var(--subtext-color)] break-words flex-1 min-w-[40%]">
+                        {q.answer}
+                      </span>
+                    )}
+
+                    {/* 스피커 버튼 — 항상 맨 오른쪽 고정 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        speak(q.content)
+                      }}
+                      className="text-indigo-400 hover:text-indigo-700 ml-auto shrink-0 self-start"
+                    >
+                      <Volume2 size={22} />
+                    </button>
+
+                  </div>
+                </div>
+              )
+            }
+
+            // 기본 모드 (원래 UI)
+            return (
+              <div
+                key={idx}
+                className="p-4 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] shadow-sm hover:scale-[1.01] transition"
+              >
+                {quizSet.type === 'WORD' ? (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-sm text-indigo-700 dark:text-indigo-300">단어</span>
+                      <button
+                        onClick={() => speak(q.content)}
+                        className="ml-1 text-indigo-400 hover:text-indigo-700"
+                      >
+                        <Volume2 size={18} />
+                      </button>
+                    </div>
+
+                    <div className="text-base mb-2 text-[var(--text-color)] break-all flex items-center gap-2">
+                      <span>{q.content}</span>
+                    </div>
+
+                    <div className="text-[var(--subtext-color)] text-sm flex items-center gap-1">
+                      뜻:
+                      <span>{q.answer}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-sm text-indigo-700 dark:text-indigo-300">문제</span>
+                      <button
+                        onClick={() => speak(q.content)}
+                        className="ml-1 text-indigo-400 hover:text-indigo-700"
+                      >
+                        <Volume2 size={18} />
+                      </button>
+                    </div>
+
+                    <div className="text-base mb-2 text-[var(--text-color)] break-all flex items-center gap-2">
+                      <span>{q.content}</span>
+                    </div>
+
+                    <div className="text-[var(--subtext-color)] text-sm flex items-center gap-1">
+                      정답:
+                      <span>{q.answer}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* 하단 액션 */}
         {isOwner && (
           <div className="flex flex-col sm:flex-row gap-2 justify-end mt-8">
             <button
               onClick={() => setShowEditModal(true)}
-              className="px-4 py-2 rounded-md bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-sm font-semibold text-[var(--button-text)] shadow transition w-full sm:w-auto"
+              className="px-4 py-2 rounded-md bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)]
+                text-sm font-semibold text-[var(--button-text)] shadow transition w-full sm:w-auto"
             >
               수정
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-sm font-semibold text-white shadow transition w-full sm:w-auto"
+              className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600
+                text-sm font-semibold text-white shadow transition w-full sm:w-auto"
             >
               삭제
             </button>
