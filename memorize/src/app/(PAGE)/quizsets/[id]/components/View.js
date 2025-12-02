@@ -242,7 +242,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
                     }))
                   }
                 >
-                  <div className="flex flex-wrap items-start w-full gap-2">
+                  <div className="flex flex-wrap items-baseline w-full gap-2">
 
                     {/* 단어 */}
                     <span className="font-bold text-base text-[var(--text-color)] shrink-0">
