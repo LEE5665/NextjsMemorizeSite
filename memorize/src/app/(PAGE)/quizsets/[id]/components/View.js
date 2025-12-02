@@ -157,9 +157,9 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
           <span className={`
             inline-flex items-center justify-center min-w-[52px] px-3 py-1 text-xs font-semibold rounded-full
             ${quizSet.isPublic
-              ? 'bg-[var(--badge-bg-public)] text-[var(--badge-text-public)]'
-              : 'bg-[var(--badge-bg-private)] text-[var(--badge-text-private)]'
-            } whitespace-nowrap
+                ? 'bg-[var(--badge-bg-public)] text-[var(--badge-text-public)]'
+                : 'bg-[var(--badge-bg-private)] text-[var(--badge-text-private)]'
+              } whitespace-nowrap
           `}>
             {quizSet.isPublic ? '공개' : '비공개'}
           </span>
@@ -184,13 +184,13 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
           </div>
         )}
 
-        {/* 내 퀴즈 모드 카드 */}
+        {/* ✨ 모드 카드 */}
         {isOwner && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
             {MODES.filter(mode =>
               (quizSet.type === 'WORD' && mode.type === 'WORD') ||
               (quizSet.type === 'QA' && mode.type === 'QA')
-            ).map(renderModeCard)}
+            ).map(mode => renderModeCard(mode))} {/* key 정상 */}
           </div>
         )}
 
@@ -198,40 +198,43 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
         <div className="flex items-center gap-3 mb-5">
           <span className="font-semibold text-sm text-[var(--text-color)]">보기 모드:</span>
 
+          {/* 기본 모드 버튼 */}
           <button
             onClick={() => setIsSimpleMode(false)}
-            className={`px-3 py-1 rounded-lg text-sm font-bold ${!isSimpleMode
-                ? 'bg-[var(--button-bg)] text-white'
-                : 'bg-[var(--input-bg)] text-[var(--text-color)]'
+            className={`px-3 py-1 rounded-lg text-sm font-bold transition-all duration-150
+              ${!isSimpleMode
+                ? 'bg-[var(--button-bg)] text-white shadow-md scale-[1.05]'
+                : 'bg-[var(--input-bg)] text-[var(--text-color)] hover:bg-[var(--button-bg)] hover:text-white hover:scale-[1.03]'
               }`}
           >
             기본
           </button>
 
+          {/* 단어만 모드 버튼 */}
           <button
             onClick={() => setIsSimpleMode(true)}
-            className={`px-3 py-1 rounded-lg text-sm font-bold ${isSimpleMode
-                ? 'bg-[var(--button-bg)] text-white'
-                : 'bg-[var(--input-bg)] text-[var(--text-color)]'
+            className={`px-3 py-1 rounded-lg text-sm font-bold transition-all duration-150
+              ${isSimpleMode
+                ? 'bg-[var(--button-bg)] text-white shadow-md scale-[1.05]'
+                : 'bg-[var(--input-bg)] text-[var(--text-color)] hover:bg-[var(--button-bg)] hover:text-white hover:scale-[1.03]'
               }`}
           >
             단어만
           </button>
         </div>
 
-        {/* ======================================================
-            문제 카드 렌더링
-        ====================================================== */}
+        {/* 문제 카드 */}
         <div className="border-t border-[var(--border-color)] pt-7 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
           {quizSet.questions.map((q, idx) => {
             const isShown = progressMap[`show_${idx}`] ?? false
 
-            // 단어만 보기 모드
+            // 단어만 모드
             if (isSimpleMode) {
               return (
                 <div
+                  key={idx}
                   className="p-4 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)]
-    shadow-sm hover:scale-[1.01] cursor-pointer transition"
+                  shadow-sm hover:scale-[1.01] cursor-pointer transition"
                   onClick={() =>
                     setProgressMap(prev => ({
                       ...prev,
@@ -246,14 +249,14 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
                       {q.content}
                     </span>
 
-                    {/* 뜻 (짧으면 옆줄, 길면 자동으로 아래로) */}
+                    {/* 뜻 */}
                     {isShown && (
                       <span className="text-sm text-[var(--subtext-color)] break-words flex-1 min-w-[40%]">
                         {q.answer}
                       </span>
                     )}
 
-                    {/* 스피커 버튼 — 항상 맨 오른쪽 고정 */}
+                    {/* 스피커 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -269,7 +272,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
               )
             }
 
-            // 기본 모드 (원래 UI)
+            // 기본 모드
             return (
               <div
                 key={idx}
@@ -329,14 +332,14 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
             <button
               onClick={() => setShowEditModal(true)}
               className="px-4 py-2 rounded-md bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)]
-                text-sm font-semibold text-[var(--button-text)] shadow transition w-full sm:w-auto"
+              text-sm font-semibold text-[var(--button-text)] shadow transition w-full sm:w-auto"
             >
               수정
             </button>
             <button
               onClick={handleDelete}
               className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600
-                text-sm font-semibold text-white shadow transition w-full sm:w-auto"
+              text-sm font-semibold text-white shadow transition w-full sm:w-auto"
             >
               삭제
             </button>
