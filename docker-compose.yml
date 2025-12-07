@@ -40,7 +40,7 @@ services:
     entrypoint: >
       sh -c "certbot certonly --webroot -w /var/www/certbot
       --email your@email.com --agree-tos --no-eff-email
-      -d quiz-web.p-e.kr"
+      -d quiz-web.p-e.kr -d www.quiz-web.p-e.kr"
 
 volumes:
   mariadb_data:
