@@ -108,6 +108,7 @@ export default function QuizViewPage({ quizSet, progresses, currentUserId }) {
       actionButtons = (
         <button
           className="w-full mt-1 py-2 rounded-lg font-bold text-sm bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-white transition"
+          onClick={restartQuiz}
         >
           시작
         </button>
