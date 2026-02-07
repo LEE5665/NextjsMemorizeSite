@@ -447,7 +447,7 @@ export default function MCQuizPage() {
 
             <button
               onClick={handleFinishEarly}
-              className="text-sm text-red-400 underline"
+              className="text-sm text-gray-400 underline"
               type="button"
             >
               끝내기
