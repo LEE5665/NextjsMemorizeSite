@@ -12,6 +12,7 @@ export default function MCQuizPage() {
   const router = useRouter()
 
   const [quizType, setQuizType] = useState(null)
+  const [quizTitle, setQuizTitle] = useState('')
   const [questions, setQuestions] = useState([])
   const [shuffledOrder, setShuffledOrder] = useState([])
   const [current, setCurrent] = useState(0)
@@ -20,11 +21,13 @@ export default function MCQuizPage() {
   const [finished, setFinished] = useState(false)
   const [incorrects, setIncorrects] = useState([])
   const [options, setOptions] = useState([])
+  const [isCreatingWrongQuiz, setIsCreatingWrongQuiz] = useState(false)
 
   useEffect(() => {
     const fetchQuiz = async () => {
       const res = await axios.get(`/api/quizsets/${id}`)
       setQuizType(res.data.type)
+      setQuizTitle(res.data.title || '')
       setQuestions(res.data.questions)
     }
     fetchQuiz()
@@ -47,6 +50,7 @@ export default function MCQuizPage() {
         const progRes = await axios.get(`/api/quizsets/${id}/progress?type=${progressType}`)
         const progArr = progRes.data.progresses || []
         const prog = progArr.find(p => p.type === progressType)?.data
+
         if (prog && prog.shuffledOrder && prog.currentIndex != null) {
           order = prog.shuffledOrder
           cur = prog.currentIndex
@@ -61,10 +65,12 @@ export default function MCQuizPage() {
           currentIndex: 0, shuffledOrder: order, incorrects: []
         })
       }
+
       setShuffledOrder(order)
       setCurrent(cur)
       setIncorrects(incs)
     }
+
     fetchProgress()
     // eslint-disable-next-line
   }, [quizType, questions, id, direction])
@@ -76,6 +82,7 @@ export default function MCQuizPage() {
   useEffect(() => {
     if (!q) return
     let answer, allAnswers
+
     if (quizType === 'QA') {
       answer = q.answer
       allAnswers = [...new Set(questions.map(q => q.answer))]
@@ -83,7 +90,12 @@ export default function MCQuizPage() {
       answer = direction === 'mean2word' ? q.content : q.answer
       allAnswers = [...new Set(questions.map(q => (direction === 'mean2word' ? q.content : q.answer)))]
     }
-    const filtered = allAnswers.filter(a => a !== answer).sort(() => Math.random() - 0.5).slice(0, 3)
+
+    const filtered = allAnswers
+      .filter(a => a !== answer)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3)
+
     setOptions(shuffle([...filtered, answer]))
     setSelected(null)
     setShowResult(false)
@@ -91,7 +103,6 @@ export default function MCQuizPage() {
 
   const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5)
 
-  // showResult를 true로 바꾸는 역할은 선택지/잘 모르겠습니다 둘 다 동일!
   const handleSelect = (option) => {
     if (selected !== null) return
     setSelected(option)
@@ -111,6 +122,7 @@ export default function MCQuizPage() {
     } else {
       answer = direction === 'mean2word' ? q.content : q.answer
     }
+
     const isCorrect = selected === answer
     const newIncorrects = !isCorrect ? [...incorrects, shuffledOrder[current]] : incorrects
 
@@ -128,6 +140,17 @@ export default function MCQuizPage() {
       setCurrent(nextIndex)
     }
     setIncorrects(newIncorrects)
+  }
+
+  // 끝내기: 남은 문제 포함 X, 푼 만큼 기준 유지
+  const handleFinishEarly = async () => {
+    await axios.put(`/api/quizsets/${id}/progress?type=${getProgressType()}`, {
+      currentIndex: current, // 푼 만큼만 저장
+      shuffledOrder,
+      incorrects,
+      finishedEarly: true,
+    })
+    setFinished(true)
   }
 
   const handleRestart = async () => {
@@ -153,7 +176,59 @@ export default function MCQuizPage() {
     window.speechSynthesis.speak(utterance)
   }
 
-  if (quizType === null || questions.length === 0 || !q && !finished) {
+  // 업로드 포맷 텍스트 생성 (만들 때만 console.log로 출력)
+  const buildWrongExportText = (wrongQs, title) => {
+    const lines = []
+    lines.push(`제목: ${title}`)
+    for (const wq of wrongQs) {
+      if (quizType === 'QA') {
+        lines.push(`문제: ${wq.content}`)
+        lines.push(`답: ${wq.answer}`)
+      } else {
+        lines.push(`단어: ${wq.content}`)
+        lines.push(`뜻: ${wq.answer}`)
+      }
+    }
+    return lines.join('\n')
+  }
+
+  // 결과창에서 틀린 문제로 새 퀴즈 만들기 (기존 POST /api/quizsets 사용)
+  const createWrongQuizSet = async () => {
+    if (isCreatingWrongQuiz) return
+    if (incorrects.length === 0) return
+
+    setIsCreatingWrongQuiz(true)
+
+    try {
+      const wrongQuestions = incorrects.map(i => questions[i]).filter(Boolean)
+      if (wrongQuestions.length === 0) {
+        alert('틀린 문제를 만들 수 없습니다.')
+        setIsCreatingWrongQuiz(false)
+        return
+      }
+
+      const newTitle = `${quizTitle || '퀴즈'} (틀린 문제)`
+
+      // 요청: “만들 때만” 로그
+      console.log(buildWrongExportText(wrongQuestions, newTitle))
+
+      const res = await axios.post('/api/quizsets', {
+        title: newTitle,
+        type: quizType,        // WORD/QA 유지
+        isPublic: false,
+        questions: wrongQuestions.map(q => ({ content: q.content, answer: q.answer })),
+      })
+
+      const newId = res.data.quizSet.id
+      router.push(`/quizsets/${newId}`)
+    } catch (e) {
+      console.error(e)
+      alert('틀린 문제 퀴즈 생성 실패')
+      setIsCreatingWrongQuiz(false)
+    }
+  }
+
+  if (quizType === null || questions.length === 0 || ((!q) && !finished)) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-xl" style={{ color: 'var(--text-color)' }}>
         불러오는 중…
@@ -162,8 +237,10 @@ export default function MCQuizPage() {
   }
 
   if (finished) {
-    const score = questions.length - incorrects.length
-    const total = questions.length
+    // 푼 만큼 기준으로 score/percent 계산
+    const attempted = current
+    const total = attempted
+    const score = Math.max(0, total - incorrects.length)
     const percent = total === 0 ? 0 : Math.round((score / total) * 100)
 
     return (
@@ -172,7 +249,6 @@ export default function MCQuizPage() {
           {/* 점수 원형 Progress */}
           <div className="flex justify-center">
             <div className="relative flex items-center justify-center w-28 h-28">
-              {/* 배경 원 */}
               <svg className="absolute top-0 left-0" width="112" height="112">
                 <circle
                   cx="56" cy="56" r="48"
@@ -180,25 +256,32 @@ export default function MCQuizPage() {
                   strokeWidth="14"
                   fill="none"
                 />
-                {/* progress 원 */}
                 <circle
                   cx="56" cy="56" r="48"
                   stroke="#3b82f6"
                   strokeWidth="14"
                   fill="none"
                   strokeDasharray={2 * Math.PI * 48}
-                  strokeDashoffset={2 * Math.PI * 48 * (1 - score / total)}
+                  strokeDashoffset={
+                    total === 0
+                      ? (2 * Math.PI * 48)
+                      : (2 * Math.PI * 48 * (1 - score / total))
+                  }
                   strokeLinecap="round"
                   transform="rotate(-90 56 56)"
                   style={{ transition: 'stroke-dashoffset 0.7s' }}
                 />
               </svg>
-              <span className="text-2xl font-extrabold text-blue-500 z-10 select-none">{score} / {total}</span>
+              <span className="text-2xl font-extrabold text-blue-500 z-10 select-none">
+                {score} / {total}
+              </span>
             </div>
           </div>
-          {/* 퀴즈 완료 텍스트 */}
+
           <h2 className="text-2xl font-bold mb-0 mt-2 tracking-tight">퀴즈 완료</h2>
-          <p className="text-lg font-semibold text-gray-500 dark:text-gray-300">정답률 <span className="font-bold text-blue-500">{percent}%</span></p>
+          <p className="text-lg font-semibold text-gray-500 dark:text-gray-300">
+            정답률 <span className="font-bold text-blue-500">{percent}%</span>
+          </p>
 
           {/* 틀린 문제 */}
           {incorrects.length > 0 && (
@@ -230,10 +313,22 @@ export default function MCQuizPage() {
               </div>
             </div>
           )}
+
+          {/* 틀린 문제로 퀴즈 만들기 (기존 POST /api/quizsets + 로그는 여기서만) */}
+          {incorrects.length > 0 && (
+            <button
+              onClick={createWrongQuizSet}
+              disabled={isCreatingWrongQuiz}
+              className="w-full px-7 py-3 rounded-2xl font-bold bg-blue-500 hover:bg-blue-600 text-lg text-white shadow transition disabled:opacity-60"
+            >
+              {isCreatingWrongQuiz ? '생성 중...' : '틀린 문제로 퀴즈 만들기'}
+            </button>
+          )}
+
           {/* 다시 하기 버튼 */}
           <button
             onClick={handleRestart}
-            className="mt-8 px-7 py-3 rounded-2xl font-bold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-lg text-white shadow transition"
+            className="mt-2 px-7 py-3 rounded-2xl font-bold bg-[var(--button-bg)] hover:bg-[var(--button-hover-bg)] text-lg text-white shadow transition"
           >
             다시 하기
           </button>
@@ -290,9 +385,9 @@ export default function MCQuizPage() {
             const isCorrect = option === answer
 
             let buttonClass = `
-    w-full px-4 py-3 rounded-xl border shadow transition
-    flex items-center gap-3
-  `
+              w-full px-4 py-3 rounded-xl border shadow transition
+              flex items-center gap-3
+            `
 
             if (showResult) {
               if (isCorrect) {
@@ -339,14 +434,25 @@ export default function MCQuizPage() {
           </div>
         )}
 
-        {/* 모르겠어요 */}
+        {/* 모르겠어요 + 끝내기 */}
         {!showResult && (
-          <button
-            onClick={() => handleSelect('')}
-            className="block mx-auto mt-2 text-sm text-gray-400 underline"
-          >
-            잘 모르겠습니다
-          </button>
+          <div className="flex items-center justify-center gap-4 mt-2">
+            <button
+              onClick={() => handleSelect('')}
+              className="text-sm text-gray-400 underline"
+              type="button"
+            >
+              잘 모르겠습니다
+            </button>
+
+            <button
+              onClick={handleFinishEarly}
+              className="text-sm text-red-400 underline"
+              type="button"
+            >
+              끝내기
+            </button>
+          </div>
         )}
       </div>
     </div>
